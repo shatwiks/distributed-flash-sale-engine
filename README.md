@@ -15,7 +15,7 @@
 
 **An enterprise-grade, concurrency-hardened flash-sale engine capable of sustaining 10,000+ RPS burst throughput with guaranteed 0.00% overbooking and sub-25ms p95 tail latency.**
 
-[Live Seat Demo](#step-2-launch-the-interactive-reservation-ui) • [System Architecture](#system-architecture) • [Empirical Benchmarks](#empirical-benchmark-matrix) • [Engineering Trade-Offs](#key-engineering-trade-offs--deep-dives) • [Quickstart in 3 Steps](#quickstart-in-3-steps) • [Interview Defense Guide](docs/interview-deep-dive.md)
+[⚡ Run on Your Laptop](#-how-to-run-on-your-laptop-60-second-quickstart) • [Live Seat Demo](#interactive-artisan-seat-reservation-ui-nextjs-15) • [System Architecture](#system-architecture) • [Empirical Benchmarks](#empirical-benchmark-matrix) • [Engineering Trade-Offs](#key-engineering-trade-offs--deep-dives) • [Cloud IaC](#production-cloud-infrastructure-as-code-aws-ecs--terraform) • [Interview Defense Guide](docs/interview-deep-dive.md)
 
 </div>
 
@@ -26,6 +26,64 @@
 - **Latency Optimization & Connection Protection**: Reduced p95 response latency from 271ms to 18.5ms (93.2% drop) compared to relational `SELECT ... FOR UPDATE` row-level locks, safeguarding PostgreSQL connection pools from thread starvation and query timeouts under high concurrency.
 - **Fault-Tolerant Distributed Sagas & Idempotency**: Designed two-phase compensating transactions (`INCRBY` rollback) to guarantee eventual consistency between Redis and PostgreSQL during database write crashes, backed by two-tier idempotency keys to prevent duplicate order executions.
 - **Core Technical Competencies**: Distributed Systems Design, Concurrency Control & Race Condition Mitigation, Node.js, Express, PostgreSQL 16, Redis 7 (Lua Scripting & Redlock), Docker (Multi-Stage Builds < 50MB), Terraform (AWS ECS Fargate, ALB, RDS, ElastiCache), k6 Load Testing, Next.js, TypeScript.
+
+---
+
+## ⚡ How to Run on Your Laptop (60-Second Quickstart)
+
+If you are a recruiter, hiring manager, or engineer testing this project on your laptop, follow these simple steps to spin up the entire distributed system and launch the interactive visualizer:
+
+### Prerequisites
+- **Docker Desktop** installed & running ([Download Docker](https://www.docker.com/products/docker-desktop/))
+- **Node.js 18+** installed ([Download Node](https://nodejs.org/))
+
+---
+
+### Step 1: Clone & Start the Production Stack
+Open a terminal in any directory and run:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/shatwiks/distributed-flash-sale-engine.git
+cd distributed-flash-sale-engine
+
+# 2. Copy environment template
+cp .env.example .env
+
+# 3. Boot the backend engine (PostgreSQL 16, Redis 7 & Express API containers)
+npm run prod
+```
+
+> **What happens under the hood:** Docker Compose spins up PostgreSQL 16, Redis 7, and the hardened Node.js API container (< 50MB). Migrations run automatically, and healthy services are chained via health checks.
+>
+> *(Optional: Verify container health by running `npm run verify:prod`)*
+
+---
+
+### Step 2: Start the Interactive Seat-Reservation UI
+In the same terminal (or a new tab):
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*(Or directly from the project root: `npm run frontend:dev`)*
+
+---
+
+### Step 3: Open in Your Browser
+
+| Service | URL | Description |
+| :--- | :--- | :--- |
+| 🎟️ **Artisan Cinema UI** | **`http://localhost:3001`** | Interactive seat booking matrix, split-screen concurrency duel & chaos rollback simulator. |
+| 🩺 **API Health Check** | **`http://localhost:3000/health`** | Real-time dual-engine ping status for Redis 7 and PostgreSQL 16. |
+| 📊 **API Endpoints** | **`http://localhost:3000/events`** | REST endpoints for event creation, pre-warming, and checkouts. |
+
+#### Try These Live Demos in the UI (`http://localhost:3001`):
+1. **Split-Screen Concurrency Duel**: Click the **"Duel Mode"** toggle in the top bar. You'll see two client windows side by side (Device A and Device B). Try clicking the exact same seat on both screens at the same time: Redis Lua guarantees only one booking succeeds while the other gets an immediate 409 Conflict rejection!
+2. **Simulate Database Crash (Saga Rollback)**: Turn on **"Simulate DB Failure"** under Chaos Controls and reserve a seat. The UI will visually show the compensating transaction (`INCRBY`) restoring Redis stock live after PostgreSQL fails.
+3. **Run Concurrency Load Tests**: Open a new terminal in the root directory and run `npm run test:stress` to simulate 10,000 RPS burst traffic.
 
 ---
 
