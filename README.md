@@ -87,6 +87,24 @@ npm run dev
 
 ---
 
+### 📸 Live UI Visual Walkthrough: What You Will See
+
+#### 1. Grand Artisan Hall & Real-Time Seat Matrix
+*Curved acoustic screen, interactive seat tiers, and Chaos Engineering rack for live fault-injection:*
+![Grand Artisan Hall Main Interface](docs/images/main-dashboard.png)
+
+#### 2. Live Wire Inspector & Sub-2ms Concurrency Telemetry
+*Deep-dive wire telemetry: Redis Lua atomic gate (< 2ms) vs. PostgreSQL async transaction, plus DB pool metrics:*
+![Real-Time Wire Inspector](docs/images/wire-inspector.png)
+
+#### 3. Skeuomorphic Ticket Pass (Issued on 201 Created)
+*Cryptographic ticket pass issued upon confirmed booking with idempotency UUID, tier pricing, and barcode:*
+<div align="center">
+  <img src="docs/images/ticket-pass.png" alt="Artisan Hall Admission Ticket Pass" width="720" />
+</div>
+
+---
+
 ## The Concurrency Bottleneck: Why Traditional RDBMS Architectures Fail
 
 During peak flash-sale bursts (concert tickets, airline seat reservations, product drops), hundreds of thousands of concurrent clients hit identical inventory checkout endpoints simultaneously. 
@@ -293,20 +311,8 @@ To visually demonstrate distributed concurrency control, the repository includes
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Interactive UI Visual Gallery
-
-#### 1. Grand Artisan Hall & Chaos Engineering Controls
-![Grand Artisan Hall Main Interface](docs/images/main-dashboard.png)
-
-#### 2. Live Wire Inspector & Two-Phase Execution Breakdown
-![Real-Time Wire Inspector](docs/images/wire-inspector.png)
-
-#### 3. Skeuomorphic Ticket Pass (Issued on 201 Created)
-<div align="center">
-  <img src="docs/images/ticket-pass.png" alt="Artisan Hall Admission Ticket Pass" width="720" />
-</div>
-
 ### Visual Engineering Proofs in the UI:
+*(See the high-resolution [Visual Walkthrough Screenshots](#-live-ui-visual-walkthrough-what-you-will-see) in the quickstart above)*
 - **Split-Screen Concurrency Duel**: Renders two independent client viewports side-by-side. Selecting the exact same seat on Device A and Device B and clicking checkout simultaneously proves that **Redis Lua prevents double-booking in real time**: one client receives the confirmed booking and ticket pass, while the other receives an instant HTTP 409 Conflict.
 - **Chaos Engineering Rollback Injection**: An interactive toggle in the UI injects a synthetic database crash after the Redis reservation succeeds. The UI observes the compensating `INCRBY` transaction live as Redis inventory is restored and the seat reverts to available.
 - **Real-Time Wire Inspector**: Inspects raw HTTP payloads, Redis Lua execution times (< 2ms), database pool utilization, and unique idempotency keys for each operation.
