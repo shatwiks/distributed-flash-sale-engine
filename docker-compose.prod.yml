@@ -1,0 +1,109 @@
+version: '3.8'
+
+# ==============================================================================
+# Full-Stack Production Orchestrator (Local Parity for AWS ECS Fargate & ALB)
+# ==============================================================================
+
+networks:
+  flash-sale-network:
+    name: flash_sale_production_network
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ticket_booking_prod_db
+    restart: unless-stopped
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=100"
+      - "-c"
+      - "shared_buffers=128MB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "effective_cache_size=256MB"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ticket_booking
+    ports:
+      - "5433:5432" # Mapped to host port 5433 to prevent collision with local dev DB
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    networks:
+      - flash-sale-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ticket_booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: ticket_booking_prod_redis
+    restart: unless-stopped
+    command:
+      - "redis-server"
+      - "--appendonly"
+      - "yes"
+      - "--maxmemory"
+      - "256mb"
+      - "--maxmemory-policy"
+      - "noeviction"
+    ports:
+      - "6380:6379" # Mapped to host port 6380 to prevent collision with local dev Redis
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - flash-sale-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ticket-booking-api:prod
+    container_name: ticket_booking_prod_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      DATABASE_URL: "postgres://postgres:password@postgres:5432/ticket_booking"
+      REDIS_URL: "redis://redis:6379"
+    ports:
+      - "3000:3000"
+    networks:
+      - flash-sale-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_prod_data:
+    name: ticket_booking_prod_postgres_data
+  redis_prod_data:
+    name: ticket_booking_prod_redis_data

@@ -1,0 +1,40 @@
+{
+  "name": "ticket-booking-api",
+  "version": "1.0.0",
+  "description": "Distributed Flash-Sale Engine & Real-Time Inventory Manager (10,000+ RPS, Zero-Overbooking)",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "migrate": "node src/db/migrate.js",
+    "prod": "docker compose -f docker-compose.prod.yml up -d --build",
+    "prod:down": "docker compose -f docker-compose.prod.yml down",
+    "test:race": "k6 run load-tests/race-condition.js",
+    "test:stress": "k6 run load-tests/stress-test.js",
+    "benchmark": "node scripts/run-benchmarks.js",
+    "verify:prod": "node scripts/verify-containers.js",
+    "verify:e2e": "node scripts/verify-e2e.js",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "load-test:race": "k6 run load-tests/race-condition.js",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up -d --build"
+  },
+  "keywords": [
+    "express",
+    "postgresql",
+    "flash-sale",
+    "ticketing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ioredis": "^6.0.0",
+    "pg": "^8.13.3",
+    "redlock": "^5.0.0-beta.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

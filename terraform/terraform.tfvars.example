@@ -1,0 +1,30 @@
+# ==============================================================================
+# Sample Terraform Variable Values
+# Copy this file to terraform.tfvars and populate real values before deployment.
+# ==============================================================================
+
+aws_region      = "us-east-1"
+environment     = "prod"
+app_name        = "ticket-booking-api"
+
+# Set after building and pushing your initial Docker image to ECR
+# Format: <aws_account_id>.dkr.ecr.<aws_region>.amazonaws.com/ticket-booking-api:prod
+container_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/ticket-booking-api:prod"
+container_port  = 3000
+
+# Database Configuration (Choose a strong, random password)
+db_name         = "ticket_booking"
+db_username     = "postgres"
+db_password     = "ChangeMeToAStrongRandomPassword123!"
+
+# Sizing & Scaling Parameters
+db_instance_class        = "db.t4g.micro"
+redis_node_type          = "cache.t4g.micro"
+ecs_cpu                  = "256"
+ecs_memory               = "512"
+ecs_min_capacity         = 2
+ecs_max_capacity         = 10
+
+# Autoscaling thresholds
+alb_request_count_target = 1000
+cpu_utilization_target   = 65

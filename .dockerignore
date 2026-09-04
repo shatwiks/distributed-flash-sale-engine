@@ -1,0 +1,39 @@
+# Dependencies & Package Managers
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Git & Version Control
+.git
+.gitignore
+
+# Environment Variables & Secrets (Prevent accidental credential leakage)
+.env
+.env.*
+!.env.example
+
+# Load Tests, Scenarios & Scratch Files
+load-tests/
+scratch/
+coverage/
+.nyc_output/
+
+# Documentation & Markdown Notes
+*.md
+!README.md
+docs/
+
+# IDE & OS Metadata
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Docker configuration files
+docker-compose*.yml
+Dockerfile*
+.dockerignore
