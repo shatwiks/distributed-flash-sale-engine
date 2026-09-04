@@ -21,7 +21,7 @@
 
 ---
 
-## 🎯 Executive Engineering Highlights (Resume-Ready)
+## 🎯 Executive Engineering Highlights 
 - **High-Throughput Concurrency Control**: Architected an in-memory inventory reservation gate using single-threaded Redis Lua scripts ($O(1)$) and Redlock distributed locking, sustaining 10,000+ RPS burst throughput with 0.00% overbooking and zero TOCTOU race conditions.
 - **Latency Optimization & Connection Protection**: Reduced p95 response latency from 271ms to 18.5ms (93.2% drop) compared to relational `SELECT ... FOR UPDATE` row-level locks, safeguarding PostgreSQL connection pools from thread starvation and query timeouts under high concurrency.
 - **Fault-Tolerant Distributed Sagas & Idempotency**: Designed two-phase compensating transactions (`INCRBY` rollback) to guarantee eventual consistency between Redis and PostgreSQL during database write crashes, backed by two-tier idempotency keys to prevent duplicate order executions.
