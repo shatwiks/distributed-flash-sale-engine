@@ -293,6 +293,19 @@ To visually demonstrate distributed concurrency control, the repository includes
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### Interactive UI Visual Gallery
+
+#### 1. Grand Artisan Hall & Chaos Engineering Controls
+![Grand Artisan Hall Main Interface](docs/images/main-dashboard.png)
+
+#### 2. Live Wire Inspector & Two-Phase Execution Breakdown
+![Real-Time Wire Inspector](docs/images/wire-inspector.png)
+
+#### 3. Skeuomorphic Ticket Pass (Issued on 201 Created)
+<div align="center">
+  <img src="docs/images/ticket-pass.png" alt="Artisan Hall Admission Ticket Pass" width="720" />
+</div>
+
 ### Visual Engineering Proofs in the UI:
 - **Split-Screen Concurrency Duel**: Renders two independent client viewports side-by-side. Selecting the exact same seat on Device A and Device B and clicking checkout simultaneously proves that **Redis Lua prevents double-booking in real time**: one client receives the confirmed booking and ticket pass, while the other receives an instant HTTP 409 Conflict.
 - **Chaos Engineering Rollback Injection**: An interactive toggle in the UI injects a synthetic database crash after the Redis reservation succeeds. The UI observes the compensating `INCRBY` transaction live as Redis inventory is restored and the seat reverts to available.
