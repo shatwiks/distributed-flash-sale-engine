@@ -6,7 +6,7 @@
 [![Express](https://img.shields.io/badge/Express-4.21-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7_Alpine-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
-[![Next.js](https://img.shields.io/badge/Next.js-15_App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16_App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Docker](https://img.shields.io/badge/Docker-Multi--Stage_<50MB-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![AWS ECS](https://img.shields.io/badge/AWS-ECS_Fargate-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/ecs/)
@@ -15,7 +15,7 @@
 
 **An enterprise-grade, concurrency-hardened flash-sale engine capable of sustaining 10,000+ RPS burst throughput with guaranteed 0.00% overbooking and sub-25ms p95 tail latency.**
 
-[⚡ Run on Your Laptop](#-how-to-run-on-your-laptop-60-second-quickstart) • [Live Seat Demo](#interactive-artisan-seat-reservation-ui-nextjs-15) • [System Architecture](#system-architecture) • [Empirical Benchmarks](#empirical-benchmark-matrix) • [Engineering Trade-Offs](#key-engineering-trade-offs--deep-dives) • [Cloud IaC](#production-cloud-infrastructure-as-code-aws-ecs--terraform) • [Interview Defense Guide](docs/interview-deep-dive.md)
+[⚡ Run on Your Laptop](#-how-to-run-on-your-laptop-60-second-quickstart) • [Live UI Architecture](#interactive-seat-reservation-ui--live-telemetry) • [System Architecture](#system-architecture) • [Empirical Benchmarks](#empirical-benchmark-matrix) • [Engineering Trade-Offs](#key-engineering-trade-offs--deep-dives) • [Cloud IaC](#production-cloud-infrastructure-as-code-aws-ecs--terraform) • [Interview Defense Guide](docs/interview-deep-dive.md)
 
 </div>
 
@@ -25,13 +25,13 @@
 - **High-Throughput Concurrency Control**: Architected an in-memory inventory reservation gate using single-threaded Redis Lua scripts ($O(1)$) and Redlock distributed locking, sustaining 10,000+ RPS burst throughput with 0.00% overbooking and zero TOCTOU race conditions.
 - **Latency Optimization & Connection Protection**: Reduced p95 response latency from 271ms to 18.5ms (93.2% drop) compared to relational `SELECT ... FOR UPDATE` row-level locks, safeguarding PostgreSQL connection pools from thread starvation and query timeouts under high concurrency.
 - **Fault-Tolerant Distributed Sagas & Idempotency**: Designed two-phase compensating transactions (`INCRBY` rollback) to guarantee eventual consistency between Redis and PostgreSQL during database write crashes, backed by two-tier idempotency keys to prevent duplicate order executions.
-- **Core Technical Competencies**: Distributed Systems Design, Concurrency Control & Race Condition Mitigation, Node.js, Express, PostgreSQL 16, Redis 7 (Lua Scripting & Redlock), Docker (Multi-Stage Builds < 50MB), Terraform (AWS ECS Fargate, ALB, RDS, ElastiCache), k6 Load Testing, Next.js, TypeScript.
+- **Turnkey Production Deployments**: Scripted across three deployment pathways: 1-Click PaaS ([`render.yaml`](render.yaml) + [`vercel.json`](vercel.json)), Enterprise AWS Cloud ([`terraform/`](terraform/)), and Single-VM Docker Compose ([`docker-compose.prod.yml`](docker-compose.prod.yml)).
 
 ---
 
 ## ⚡ How to Run on Your Laptop (60-Second Quickstart)
 
-If you are a recruiter, hiring manager, or engineer testing this project on your laptop, follow these simple steps to spin up the entire distributed system and launch the interactive visualizer:
+Follow these simple steps to spin up the entire distributed system and launch the interactive visualizer locally:
 
 ### Prerequisites
 - **Docker Desktop** installed & running ([Download Docker](https://www.docker.com/products/docker-desktop/))
@@ -39,36 +39,28 @@ If you are a recruiter, hiring manager, or engineer testing this project on your
 
 ---
 
-### Step 1: Clone & Start the Production Stack
-Open a terminal in any directory and run:
-
+### Step 1: Boot the Production Engine
 ```bash
-# 1. Clone the repository
+# 1. Clone repository
 git clone https://github.com/shatwiks/distributed-flash-sale-engine.git
 cd distributed-flash-sale-engine
 
 # 2. Copy environment template
 cp .env.example .env
 
-# 3. Boot the backend engine (PostgreSQL 16, Redis 7 & Express API containers)
+# 3. Boot backend engine (PostgreSQL 16, Redis 7 & Express API containers)
 npm run prod
 ```
-
-> **What happens under the hood:** Docker Compose spins up PostgreSQL 16, Redis 7, and the hardened Node.js API container (< 50MB). Migrations run automatically, and healthy services are chained via health checks.
->
-> *(Optional: Verify container health by running `npm run verify:prod`)*
+> **Under the hood:** Docker Compose builds the hardened Node.js API container (< 50MB), runs PostgreSQL migrations automatically, and chains service healthchecks.
 
 ---
 
-### Step 2: Start the Interactive Seat-Reservation UI
-In the same terminal (or a new tab):
-
+### Step 2: Start the Interactive UI
 ```bash
-cd frontend
-npm install
-npm run dev
+# In the same directory, run:
+npm run frontend:dev
 ```
-*(Or directly from the project root: `npm run frontend:dev`)*
+*(Or navigate to `cd frontend && npm install && npm run dev`)*
 
 ---
 
@@ -76,32 +68,52 @@ npm run dev
 
 | Service | URL | Description |
 | :--- | :--- | :--- |
-| 🎟️ **Artisan Cinema UI** | **`http://localhost:3001`** | Interactive seat booking matrix, split-screen concurrency duel & chaos rollback simulator. |
+| 🎟️ **Artisan Live UI** | **`http://localhost:3001`** | Interactive seat matrix, split-screen concurrency duel & chaos rollback simulator. |
 | 🩺 **API Health Check** | **`http://localhost:3000/health`** | Real-time dual-engine ping status for Redis 7 and PostgreSQL 16. |
-| 📊 **API Endpoints** | **`http://localhost:3000/events`** | REST endpoints for event creation, pre-warming, and checkouts. |
-
-#### Try These Live Demos in the UI (`http://localhost:3001`):
-1. **Split-Screen Concurrency Duel**: Click the **"Duel Mode"** toggle in the top bar. You'll see two client windows side by side (Device A and Device B). Try clicking the exact same seat on both screens at the same time: Redis Lua guarantees only one booking succeeds while the other gets an immediate 409 Conflict rejection!
-2. **Simulate Database Crash (Saga Rollback)**: Turn on **"Simulate DB Failure"** under Chaos Controls and reserve a seat. The UI will visually show the compensating transaction (`INCRBY`) restoring Redis stock live after PostgreSQL fails.
-3. **Run Concurrency Load Tests**: Open a new terminal in the root directory and run `npm run test:stress` to simulate 10,000 RPS burst traffic.
+| 📊 **REST Endpoints** | **`http://localhost:3000/events`** | API endpoints for event creation, pre-warming, and checkouts. |
 
 ---
 
-### 📸 Live UI Visual Walkthrough: What You Will See
+## 🏛️ Interactive Seat-Reservation UI & Live Telemetry
 
-#### 1. Grand Artisan Hall & Real-Time Seat Matrix
-*Curved acoustic screen, interactive seat tiers, and Chaos Engineering rack for live fault-injection:*
-![Grand Artisan Hall Main Interface](docs/images/main-dashboard.png)
+To visually demonstrate distributed concurrency control, the repository includes a full-stack Next.js 16 interactive terminal (`frontend/`) engineered with a **Precision Avionics & Technical Ink** aesthetic (`#f5f4f2` warm paper ground, `#ffffff` surface cards, `#111111` technical accents) with 3D perspective physics, shared layout transitions, and live telemetry:
 
-#### 2. Live Wire Inspector & Sub-2ms Concurrency Telemetry
-*Deep-dive wire telemetry: Redis Lua atomic gate (< 2ms) vs. PostgreSQL async transaction, plus DB pool metrics:*
-![Real-Time Wire Inspector](docs/images/wire-inspector.png)
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  PRECISION AVIONICS ENGINE   [ Live Status: Healthy ]  [ Redis: 0.8ms ]  [ Duel Mode ] │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                 [ CURVED STAGE SCREEN ]                                │
+│                                                                                        │
+│  STALLS (Row A-B)        [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10]            │
+│  ROYAL CIRCLE (Row C-D)  [C1] [C2] [C3] [C4] [C5] [C6] [C7] [C8] [C9] [C10]            │
+│  VIP LOGE (Row E-F)      [E1] [E2] [E3] [E4] [E5] [E6] [E7] [E8] [E9] [E10]            │
+│                                                                                        │
+│  [ DEVICE A (Chrome / Client 1) ]             [ DEVICE B (Safari / Client 2) ]         │
+│  Target: Seat C4 (Royal Circle)               Target: Seat C4 (Royal Circle)           │
+│  [ ⚡ CONFIRM BOOKING ]                       [ ⚡ CONFIRM BOOKING ]                    │
+│       │                                            │                                   │
+│       ▼                                            ▼                                   │
+│  [ 201 CREATED ]                              [ 409 CONFLICT: ALREADY RESERVED ]       │
+│  "Physical Ticket Pass Issued"                "Atomic Lua Gate Defended Collision"     │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-#### 3. Skeuomorphic Ticket Pass (Issued on 201 Created)
-*Cryptographic ticket pass issued upon confirmed booking with idempotency UUID, tier pricing, and barcode:*
-<div align="center">
-  <img src="docs/images/ticket-pass.png" alt="Artisan Hall Admission Ticket Pass" width="720" />
-</div>
+### 4 Live Engineering Demonstrations Built into the UI:
+
+1. **Split-Screen Concurrency Duel**:
+   * Click **"Duel Mode"** in the top navigation bar. Two independent client viewports (Device A and Device B) render side-by-side.
+   * Clicking the exact same seat on both devices simultaneously demonstrates **in-memory atomicity**: Redis Lua grants the lock to the sub-millisecond winner while instantly returning an HTTP 409 Conflict rejection to the other.
+
+2. **Chaos Engineering & Saga Stepper**:
+   * Toggle **"Simulate DB Crash"** under Chaos Controls.
+   * Attempting a checkout successfully reserves the seat in Redis, but triggers an intentional PostgreSQL write failure.
+   * The live UI animates the 4-stage saga stepper as the **compensating `INCRBY` rollback** fires in Redis, restoring available inventory with zero data leakage.
+
+3. **Sub-2ms Wire Inspector Drawer**:
+   * Click the bottom telemetry drawer to inspect live wire payloads, Redis Lua gate execution times ($< 2\text{ms}$), PostgreSQL transaction times, and connection pool saturation metrics (`active`, `idle`, `waiting`).
+
+4. **Skeuomorphic Ticket Pass Modal**:
+   * Confirmed bookings issue an authenticated digital ticket pass with unique idempotency UUID, timestamp, seat tier pricing, and cryptographic barcode.
 
 ---
 
@@ -122,12 +134,13 @@ COMMIT;
 
 ### 2. The Failure Modes Under High Burst:
 1. **Connection Pool Starvation (Little's Law: $L = \lambda W$)**:
-   - At an arrival rate of $\lambda = 10,000\text{ req/s}$, if transactions hold database connections for an average of $W = 25\text{ms}$ ($0.025\text{s}$), the required concurrent connection capacity is $L = 10,000 \times 0.025 = 250\text{ active connections}$.
-   - A production PostgreSQL pool typically provisions 20–50 connections. Incoming requests queue up inside Node.js event loops, exceed connection acquisition timeouts (`connectionTimeoutMillis: 2000`), and cascade into **catastrophic HTTP 500 internal server errors for 15%–20% of users**.
+   - At an arrival rate of $\lambda = 10,000\text{ req/s}$, if transactions hold database connections for an average of $W = 25\text{ms}$ ($0.025\text{s}$), the required concurrent connection capacity is:
+     $$L = 10,000 \times 0.025 = 250\text{ active connections}$$
+   - A standard PostgreSQL pool typically provisions 20–50 connections. Incoming requests queue up inside Node.js event loops, exceed connection acquisition timeouts (`connectionTimeoutMillis: 2000`), and cascade into **catastrophic HTTP 500 errors for 15%–20% of users**.
 2. **Lock Queue Serialization & Extreme Tail Latency**:
    - `SELECT ... FOR UPDATE` enforces strict mutual exclusion on the single row representing the event. Thousands of concurrent workers wait in an operating system wait queue for row locks, driving p99 latency beyond $1,240\text{ms}$.
 3. **The TOCTOU (Time-of-Check to Time-of-Use) Vulnerability**:
-   - Relational designs lacking row locks read stale inventory, concurrently approve stock deductions, and create **severe inventory overselling (overbooking)** that violates the fundamental physical invariant: `available_tickets >= 0`.
+   - Relational designs lacking row locks read stale inventory, concurrently approve stock deductions, and create **severe inventory overselling (overbooking)** that violates the fundamental invariant: $\text{available\_tickets} \ge 0$.
 
 ---
 
@@ -137,7 +150,7 @@ The engine employs a **two-layer reservation pattern** separating sub-millisecon
 
 ### End-to-End Request Lifecycle
 
-```
+```text
 [ 10,000+ Concurrent Requests / k6 Burst Load ]
                      │
                      ▼
@@ -196,10 +209,10 @@ The engine employs a **two-layer reservation pattern** separating sub-millisecon
 sequenceDiagram
     autonumber
     actor Client as Client / Load Generator
-    participant ALB as AWS ALB
+    participant ALB as AWS ALB / Gateway
     participant Worker as ECS Fargate Worker (Node.js)
-    participant Redis as Redis 7 (ElastiCache)
-    participant Postgres as PostgreSQL 16 (RDS)
+    participant Redis as Redis 7 (In-Memory Gate)
+    participant Postgres as PostgreSQL 16 (Durable Store)
 
     Client->>ALB: POST /events/:id/checkout (idempotencyKey)
     ALB->>Worker: Route request to active container
@@ -287,168 +300,36 @@ Both engines were benchmarked on identical infrastructure with an arrival target
 
 ---
 
-## Interactive Artisan Seat-Reservation UI (Next.js 15)
+## 🚀 Production Deployment Pathways
 
-To visually demonstrate distributed concurrency control, the repository includes a full-stack interactive seat reservation app (`frontend/`) styled with a **"Warm Craft / Modern Woodwork"** aesthetic (walnut `#1C1512`, cedar `#2A1E18`, brass accents `#C5A059`, and parchment typography `#F7F2EA`).
+This project supports three deployment methods documented in [`DEPLOYMENT.md`](DEPLOYMENT.md):
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ARTISAN THEATRE ENGINE    [ Oppenheimer 70mm ]    [ Redis: 0.8ms ]    [ Split-Screen ]│
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│                                 [ CURVED SCREEN ]                                      │
-│                                                                                        │
-│  STALLS (Row A-B)        [A1] [A2] [A3] [A4] [A5] [A6] [A7] [A8] [A9] [A10]            │
-│  ROYAL CIRCLE (Row C-D)  [C1] [C2] [C3] [C4] [C5] [C6] [C7] [C8] [C9] [C10]            │
-│  VIP LOGE (Row E-F)      [E1] [E2] [E3] [E4] [E5] [E6] [E7] [E8] [E9] [E10]            │
-│                                                                                        │
-│  [ DEVICE A (Chrome / Mac) ]                  [ DEVICE B (Safari / iOS) ]             │
-│  Selected: Seat C4 (Royal Circle)             Selected: Seat C4 (Royal Circle)         │
-│  [ ⚡ CONFIRM BOOKING ]                       [ ⚡ CONFIRM BOOKING ]                  │
-│       │                                            │                                   │
-│       ▼                                            ▼                                   │
-│  [ 201 CREATED ]                              [ 409 CONFLICT: SEAT ALREADY RESERVED ]  │
-│  "Physical Ticket Pass Issued"                "Atomic Lua Gate Defended Collision"     │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
+### 1. 1-Click Cloud (Render + Vercel)
+- **Backend & Databases on Render:** Connect GitHub repository, select **Blueprint**, and Render will automatically read [`render.yaml`](render.yaml) to provision the Node.js API, PostgreSQL 16 database, and Redis 7 cache.
+- **Frontend on Vercel:** Import repository, set `NEXT_PUBLIC_API_URL` to your Render API URL, and deploy in 60 seconds via [`vercel.json`](vercel.json).
 
-### Visual Engineering Proofs in the UI:
-*(See the high-resolution [Visual Walkthrough Screenshots](#-live-ui-visual-walkthrough-what-you-will-see) in the quickstart above)*
-- **Split-Screen Concurrency Duel**: Renders two independent client viewports side-by-side. Selecting the exact same seat on Device A and Device B and clicking checkout simultaneously proves that **Redis Lua prevents double-booking in real time**: one client receives the confirmed booking and ticket pass, while the other receives an instant HTTP 409 Conflict.
-- **Chaos Engineering Rollback Injection**: An interactive toggle in the UI injects a synthetic database crash after the Redis reservation succeeds. The UI observes the compensating `INCRBY` transaction live as Redis inventory is restored and the seat reverts to available.
-- **Real-Time Wire Inspector**: Inspects raw HTTP payloads, Redis Lua execution times (< 2ms), database pool utilization, and unique idempotency keys for each operation.
-- **Skeuomorphic Ticket Pass Modal**: Renders an authentic paper ticket with micro-perforations, barcode, security hash, and timestamp upon successful reservation.
+### 2. Enterprise Cloud IaC (AWS ECS Fargate + Terraform)
+Modular Terraform manifests in [`terraform/`](terraform/) provision a production VPC, private subnets, RDS PostgreSQL 16, ElastiCache Redis 7, ALB, and auto-scaling ECS Fargate worker clusters. See [`docs/deployment-runbook.md`](docs/deployment-runbook.md).
 
----
-
-## Quickstart in 3 Steps
-
-### Step 1: Start the Production Stack (PostgreSQL 16, Redis 7 & Express API)
+### 3. Single-Server VPS (Docker Compose)
+Run the entire production container stack on any Ubuntu VM:
 ```bash
-# Clone the repository
-git clone https://github.com/shatwiks/distributed-flash-sale-engine.git
-cd distributed-flash-sale-engine
-
-# Copy environment variables
-cp .env.example .env
-
-# Launch production multi-stage containers via Docker Compose
-npm run prod
-```
-
-Verify all containers are healthy:
-```bash
-npm run verify:prod
-```
-Expected output:
-```text
-✔ Production API Container: HEALTHY (Port 3000)
-✔ Redis 7 Container: HEALTHY (Port 6380)
-✔ PostgreSQL 16 Container: HEALTHY (Port 5433)
-✔ Image Size: 47.3 MB (Target < 50 MB)
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ---
 
-### Step 2: Launch the Interactive Reservation UI
-```bash
-# Navigate to frontend and start the Next.js dev server (runs on port 3001)
-cd frontend
-npm install
-npm run dev
-```
-
-Open **`http://localhost:3001`** in your browser:
-- Test single-seat reservation across Stalls, Royal Circle, and VIP Loge.
-- Toggle **Split-Screen Duel Mode** to test concurrent race condition prevention across two devices.
-- Toggle **Simulate DB Crash (Saga Rollback)** to watch the compensating transaction in real time.
-
----
-
-### Step 3: Run the High-Throughput Concurrency Tests
-In a separate terminal, execute the k6 concurrency and stress suites:
+## 🧪 Benchmark & Concurrency Testing
 
 ```bash
-# 1. Run the Phase 2 Race Condition demonstration (shows naive flaw)
+# 1. Race condition demonstration (demonstrates naive TOCTOU vulnerability)
 npm run test:race
 
-# 2. Run the Phase 6 High-Throughput 10,000 RPS burst test (hardened engine)
+# 2. 10,000 RPS burst stress test (hardened engine)
 npm run test:stress
 
-# 3. Run the automated side-by-side benchmark runner
+# 3. Automated side-by-side performance runner
 npm run benchmark
-```
-
----
-
-## Production Cloud Infrastructure as Code (AWS ECS & Terraform)
-
-The repository includes enterprise-grade, modular Terraform IaC located in `terraform/`:
-
-```text
-terraform/
-├── main.tf                  # AWS provider (~> 5.0), AZ discovery, resource tags
-├── variables.tf             # Parameterized cloud inputs (environment, VPC CIDR, tasks)
-├── outputs.tf               # Exported ALB DNS, RDS endpoint, ElastiCache endpoint
-├── networking.tf            # Dedicated VPC (10.0.0.0/16), 4 subnets across 2 AZs, IGW, NAT GW
-├── security.tf              # Least-privilege Security Groups (ALB -> ECS -> RDS/ElastiCache)
-├── database.tf              # Amazon RDS PostgreSQL 16 & Amazon ElastiCache Redis 7
-├── alb.tf                   # Internet-facing ALB, target group, HTTP/HTTPS listeners, health checks
-├── ecs.tf                   # ECR repository, ECS cluster, task definition, Fargate service
-└── autoscaling.tf           # Target-tracking autoscaling (1,000 req/min & 65% CPU utilization)
-```
-
-### Key Infrastructure Highlights:
-- **Private Subnet Isolation**: RDS PostgreSQL and ElastiCache Redis reside in private subnets with no public internet ingress.
-- **Least-Privilege Security Group Chaining**: ECS tasks accept ingress traffic strictly from the ALB security group. RDS and Redis accept ingress strictly from the ECS task security group.
-- **Target-Tracking Horizontal Auto-Scaling**: ECS Fargate auto-scales from 2 to 10 tasks based on ALB request counts (1,000 req/min/task) and CPU thresholds (65%).
-
----
-
-## Repository Structure
-
-```text
-ticket-booking-api/
-├── .dockerignore                # Production container exclusions
-├── .env.example                 # Environment configuration template
-├── .gitignore                   # Ignores build artifacts, node_modules, temp logs
-├── Dockerfile                   # Multi-stage production build (< 50MB, Alpine, non-root)
-├── docker-compose.yml           # Local development services
-├── docker-compose.prod.yml      # Local production stack with healthcheck chaining
-├── docker-entrypoint.sh         # Auto-migration script executed before container boot
-├── package.json                 # Project dependencies & automated runner scripts
-├── BENCHMARKS.md                # Comprehensive benchmark methodology & data analysis
-├── README.md                    # Recruiter-ready executive documentation
-├── docs/
-│   ├── interview-deep-dive.md   # Staff/Principal technical interview defense guide
-│   └── deployment-runbook.md    # Step-by-step AWS provisioning and teardown runbook
-├── frontend/                    # Next.js 15 + TypeScript Artisan Reservation App
-│   ├── app/                     # Next.js App Router (page.tsx, layout.tsx, globals.css)
-│   ├── components/              # SeatMatrix, DuelConsole, ChaosControls, WireInspector, TicketPass
-│   ├── lib/api.ts               # Backend API client with micro-timing telemetry
-│   └── package.json             # Next.js dependencies (Tailwind, Lucide, Canvas Confetti)
-├── load-tests/
-│   ├── race-condition.js        # k6 test demonstrating baseline TOCTOU vulnerabilities
-│   └── stress-test.js           # k6 10,000 RPS burst test for hardened engine
-├── scripts/
-│   ├── run-benchmarks.js        # Automated side-by-side performance runner
-│   └── verify-containers.js     # Production container health and image size verifier
-├── src/
-│   ├── index.js                 # Express bootstrap, CORS middleware, graceful shutdown
-│   ├── cache/
-│   │   └── redis.js             # ioredis singleton, exponential backoff, health ping
-│   ├── db/
-│   │   ├── pool.js              # pg.Pool with tuned connection timeouts
-│   │   ├── schema.sql           # Schema DDL (events, orders, constraints, indexes)
-│   │   └── migrate.js           # Idempotent migration runner
-│   ├── middleware/
-│   │   ├── asyncHandler.js      # Centralized async try/catch wrapper
-│   │   └── errorHandler.js      # HTTP error mapping
-│   ├── routes/
-│   │   └── events.js            # REST endpoints: /health, /events, /checkout, /prewarm, /seats
-│   └── services/
-│       ├── inventoryService.js  # In-memory atomic Lua reservation, prewarming, Redlock
-│       └── ticketService.js     # Two-layer reservation engine & compensating rollback
-└── terraform/                   # Production AWS ECS, ALB, RDS, ElastiCache manifests
 ```
 
 ---
@@ -466,6 +347,12 @@ GET /health
   "services": {
     "postgres": "up",
     "redis": "up"
+  },
+  "pool": {
+    "total": 1,
+    "idle": 1,
+    "waiting": 0,
+    "active": 0
   }
 }
 ```
@@ -503,7 +390,7 @@ idempotency-key: order_uuid_10283
 }
 ```
 
-**Success Response (201 Created - Confirmed):**
+**Success Response (201 Created):**
 ```json
 {
   "id": "a91b5c43-4217-48f0-b8c1-1c3905cfb75f",
@@ -517,7 +404,7 @@ idempotency-key: order_uuid_10283
 }
 ```
 
-**Sold-Out Response (409 Conflict - Fast-Path Rejection):**
+**Fast-Path Rejection (409 Conflict):**
 ```json
 {
   "id": "d13e9a72-76a1-432e-b6fe-2cf3b590e84c",
@@ -532,8 +419,63 @@ idempotency-key: order_uuid_10283
 
 ---
 
+## Repository Structure
+
+```text
+distributed-flash-sale-engine/
+├── .agents/                     # Impeccable & Taste-Skill v2 intelligence, rules, playbooks
+├── .dockerignore                # Production container exclusions
+├── .env.example                 # Environment configuration template
+├── .gitignore                   # Ignores build artifacts, node_modules, temp logs
+├── Dockerfile                   # Multi-stage production build (< 50MB, Alpine, non-root)
+├── docker-compose.yml           # Local development services
+├── docker-compose.prod.yml      # Local production stack with healthcheck chaining
+├── docker-entrypoint.sh         # Auto-migration script executed before container boot
+├── package.json                 # Project dependencies & automated runner scripts
+├── BENCHMARKS.md                # Comprehensive benchmark methodology & data analysis
+├── DEPLOYMENT.md                # 5-minute Render + Vercel and AWS deployment guide
+├── DESIGN.md                    # Precision Avionics design tokens and component specs
+├── PRODUCT.md                   # Product truth schema and architectural invariants
+├── render.yaml                  # 1-click Render blueprint (API + PostgreSQL 16 + Redis 7)
+├── vercel.json                  # Next.js 16 build configuration for Vercel
+├── docs/
+│   ├── interview-deep-dive.md   # Staff/Principal technical interview defense guide
+│   └── deployment-runbook.md    # Step-by-step AWS provisioning and teardown runbook
+├── frontend/                    # Next.js 16 + TypeScript Artisan UI
+│   ├── app/                     # Next.js App Router (page.tsx, layout.tsx, globals.css)
+│   ├── components/              # SeatMatrix, DuelConsole, ChaosControls, WireInspector, Card3D
+│   ├── lib/api.ts               # Backend API client with micro-timing telemetry
+│   └── package.json             # Next.js dependencies (Tailwind, Lucide, Canvas Confetti)
+├── load-tests/
+│   ├── race-condition.js        # k6 test demonstrating baseline TOCTOU vulnerabilities
+│   └── stress-test.js           # k6 10,000 RPS burst test for hardened engine
+├── scripts/
+│   ├── run-benchmarks.js        # Automated side-by-side performance runner
+│   └── verify-containers.js     # Production container health and image size verifier
+├── src/
+│   ├── index.js                 # Express bootstrap, dynamic CORS, graceful shutdown
+│   ├── cache/
+│   │   └── redis.js             # ioredis singleton, exponential backoff, TLS support
+│   ├── db/
+│   │   ├── pool.js              # pg.Pool with tuned timeouts and cloud SSL auto-negotiation
+│   │   ├── schema.sql           # Schema DDL (events, orders, constraints, indexes)
+│   │   └── migrate.js           # Idempotent migration runner
+│   ├── middleware/
+│   │   ├── asyncHandler.js      # Centralized async try/catch wrapper
+│   │   └── errorHandler.js      # HTTP error mapping
+│   ├── routes/
+│   │   └── events.js            # REST endpoints: /health, /events, /checkout, /prewarm, /seats
+│   └── services/
+│       ├── inventoryService.js  # In-memory atomic Lua reservation, prewarming, Redlock
+│       └── ticketService.js     # Two-layer reservation engine & compensating rollback
+└── terraform/                   # Production AWS ECS, ALB, RDS, ElastiCache manifests
+```
+
+---
+
 ## Technical Deep-Dives & Further Reading
 
 - 📖 **[Staff/Principal Interview Defense Guide (docs/interview-deep-dive.md)](docs/interview-deep-dive.md)**: Exhaustive answers to architectural questions on lock contention, compensating rollbacks, Redlock distributed locking vs. Lua scripts, and bot mitigation.
 - 📊 **[Comprehensive Benchmark Analysis (BENCHMARKS.md)](BENCHMARKS.md)**: Detailed k6 testing methodology, latency percentile breakdowns, queuing theory calculations, and mathematical proofs.
-- ☁️ **[AWS Cloud Deployment Runbook (docs/deployment-runbook.md)](docs/deployment-runbook.md)**: Complete guide for provisioning AWS infrastructure, pushing images to ECR, zero-downtime deployments, and teardown.
+- 🚀 **[Deployment Runbook & PaaS Guide (DEPLOYMENT.md)](DEPLOYMENT.md)**: Detailed instructions for 1-click Render + Vercel and AWS Cloud deployments.
+- ☁️ **[AWS Cloud Infrastructure Runbook (docs/deployment-runbook.md)](docs/deployment-runbook.md)**: Complete guide for provisioning AWS infrastructure, pushing images to ECR, zero-downtime deployments, and teardown.
