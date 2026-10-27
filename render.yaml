@@ -1,5 +1,6 @@
 # Render Blueprint Specification
 # https://render.com/docs/blueprint-spec
+version: "1"
 
 services:
   # 1. Express.js High-Throughput Ticket Booking API
@@ -20,20 +21,21 @@ services:
           name: ticket-booking-db
           property: connectionString
       - key: REDIS_URL
-        fromDatabase:
+        fromService:
+          type: keyvalue
           name: ticket-booking-redis
           property: connectionString
 
+  # 2. Redis 7 High-Throughput In-Memory Key-Value Cache
+  - type: keyvalue
+    name: ticket-booking-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: [] # Internal private network only
+
 databases:
-  # 2. PostgreSQL 16 Relational Database
+  # 3. PostgreSQL 16 Relational Database
   - name: ticket-booking-db
     databaseName: ticket_booking_prod
     user: ticket_booking_user
     plan: free
-
-  # 3. Redis 7 High-Throughput In-Memory Key-Value Cache
-  - name: ticket-booking-redis
-    type: keyvalue
-    plan: free
-    maxmemoryPolicy: noeviction
-    ipAllowList: [] # Internal private network only
