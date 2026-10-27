@@ -4,7 +4,7 @@
  */
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "") : "") ||
   (typeof window !== "undefined" ? "/api/backend" : "http://localhost:3000");
 
 export interface EventData {

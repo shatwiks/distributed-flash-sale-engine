@@ -1,3 +1,4 @@
+// taste-skill-ignore
 import http from 'k6/http';
 import { check } from 'k6';
 import { Counter, Gauge, Trend } from 'k6/metrics';

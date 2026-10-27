@@ -8,12 +8,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware: CORS & JSON body parsing
-const ALLOWED_ORIGINS = ['http://localhost:3001', 'http://localhost:3000'];
-
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.startsWith('http://localhost:')) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
+  if (origin) {
+    // Reflect request origin so credentials work across domains (Vercel, custom domain, localhost)
+    res.header('Access-Control-Allow-Origin', origin);
   } else {
     res.header('Access-Control-Allow-Origin', '*');
   }

@@ -1,7 +1,13 @@
 "use client";
 
-import React from "react";
-import { Clock, ShieldCheck, AlertCircle, Trash2, Layers, Flame } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Clock,
+  Trash2,
+  Layers,
+  CheckCircle2,
+  ShieldAlert,
+} from "lucide-react";
 import { CheckoutResult } from "@/lib/api";
 
 export interface StreamItem extends CheckoutResult {
@@ -14,103 +20,141 @@ interface ActivityStreamProps {
 }
 
 export function ActivityStream({ items, onClear }: ActivityStreamProps) {
+  const [filter, setFilter] = useState<"all" | "confirmed" | "blocked">("all");
+
+  const filteredItems = items.filter((item) => {
+    if (filter === "confirmed") return item.statusCode === 201 || item.statusCode === 200;
+    if (filter === "blocked") return item.statusCode === 409 || item.contested;
+    return true;
+  });
+
   return (
-    <div className="card-craft p-5 sm:p-6">
+    <div className="card-light p-5 flex flex-col">
       {/* Stream Header */}
-      <div className="flex items-center justify-between border-b border-[#3D2B1F] pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3.5 gap-3">
         <div>
-          <h3 className="flex items-center gap-2 font-serif text-base font-bold text-[#F5EFEB]">
-            <Layers className="h-4 w-4 text-[#C5A059]" />
-            Live Distributed Audit Stream
+          <h3 className="flex items-center gap-2 text-sm font-bold text-[#0a0a0a]">
+            <Layers className="h-4 w-4 text-[#0a0a0a]" />
+            <span>Live Concurrency Audit Stream</span>
           </h3>
-          <p className="text-xs text-[#D4B996]/70">
+          <p className="text-xs text-[#616160] mt-0.5">
             Real-time chronological log of seat acquisition attempts and Redis Lua gate decisions.
           </p>
         </div>
 
-        {items.length > 0 && (
-          <button
-            onClick={onClear}
-            className="flex items-center gap-1 rounded-lg border border-[#3D2B1F] bg-[#1E1611] px-2.5 py-1 text-xs text-[#D4B996]/70 transition hover:border-[#6B4D36] hover:text-[#F5EFEB]"
-          >
-            <Trash2 className="h-3 w-3" />
-            <span>Clear</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Quick Filter Buttons */}
+          <div className="flex items-center rounded-full bg-[#f5f4f2] border border-[#e5e3df] p-1 text-xs">
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-3 py-1 rounded-full transition-colors ${
+                filter === "all" ? "bg-[#0a0a0a] text-white font-semibold" : "text-[#616160] hover:text-[#0a0a0a]"
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter("confirmed")}
+              className={`px-3 py-1 rounded-full transition-colors ${
+                filter === "confirmed" ? "bg-[#0a0a0a] text-white font-semibold" : "text-[#616160] hover:text-[#0a0a0a]"
+              }`}
+            >
+              201
+            </button>
+            <button
+              onClick={() => setFilter("blocked")}
+              className={`px-3 py-1 rounded-full transition-colors ${
+                filter === "blocked" ? "bg-[#0a0a0a] text-white font-semibold" : "text-[#616160] hover:text-[#0a0a0a]"
+              }`}
+            >
+              409
+            </button>
+          </div>
+
+          {items.length > 0 && (
+            <button
+              onClick={onClear}
+              className="flex items-center gap-1 rounded-full bg-[#f5f4f2] hover:bg-[#edebe7] border border-[#e5e3df] px-3 py-1 text-xs text-[#0a0a0a] font-medium transition-colors"
+              title="Clear activity log"
+            >
+              <Trash2 className="h-3 w-3" />
+              <span>Clear</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Stream Table / Feed */}
-      <div className="mt-3 overflow-x-auto">
-        {items.length === 0 ? (
-          <div className="timber-inset flex flex-col items-center justify-center p-6 text-center">
-            <Clock className="h-6 w-6 text-[#8C6239] opacity-40" />
-            <p className="mt-2 text-xs text-[#D4B996]/60">
-              No transactions recorded yet. Click a seat and confirm, or trigger a collision test.
+      {/* Stream Feed */}
+      <div className="mt-3 overflow-x-auto max-h-[360px] overflow-y-auto">
+        {filteredItems.length === 0 ? (
+          <div className="bg-[#f5f4f2] border border-[#e5e3df] rounded-2xl flex flex-col items-center justify-center p-8 text-center">
+            <Clock className="h-7 w-7 text-[#a1a1a1] mb-2" />
+            <p className="text-xs text-[#616160]">
+              No transactions recorded yet. Click a seat and confirm, or test a 2-client collision.
             </p>
           </div>
         ) : (
-          <table className="w-full text-left font-mono text-xs">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-[#3D2B1F] text-[#D4B996]/60 text-[11px]">
-                <th className="py-2 px-2.5">Time</th>
-                <th className="py-2 px-2.5">User/Device</th>
-                <th className="py-2 px-2.5">Seat</th>
-                <th className="py-2 px-2.5">Gate Decision</th>
-                <th className="py-2 px-2.5">Latency</th>
-                <th className="py-2 px-2.5">Transaction ID</th>
+              <tr className="text-[#616160] text-xs font-semibold bg-[#f5f4f2] rounded-lg">
+                <th className="py-2.5 px-3 rounded-l-lg">Time</th>
+                <th className="py-2.5 px-3">Client</th>
+                <th className="py-2.5 px-3">Seat</th>
+                <th className="py-2.5 px-3">Gate Decision</th>
+                <th className="py-2.5 px-3">Latency</th>
+                <th className="py-2.5 px-3 rounded-r-lg">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2A1D17]">
-              {items.slice(0, 10).map((item, idx) => {
-                const isConfirmed = item.statusCode === 201 || item.statusCode === 200;
-                const isContested = item.contested || item.statusCode === 409;
-                const seatNum = item.seat_number || item.seatNumber || "--";
+            <tbody>
+              {filteredItems.map((item, idx) => {
+                const isSuccess = item.statusCode === 201 || item.statusCode === 200;
+                const seat = item.seat_number || item.seatNumber || "--";
+                const gateMs = item.gateLatencyMs || 1.2;
 
                 return (
                   <tr
-                    key={idx}
-                    className="transition-colors hover:bg-[#2A1D17]/50"
+                    key={item.id || `${item.timestamp}_${idx}`}
+                    className="hover:bg-[#f5f4f2] transition-colors rounded-lg"
                   >
-                    <td className="py-2 px-2.5 text-[#D4B996]/80 text-[11px]">{item.timestamp}</td>
-                    <td className="py-2 px-2.5 text-[#F5EFEB] font-medium text-[11px]">
-                      {item.user_id || "buyer_anon"}
+                    <td className="py-2.5 px-2.5 text-[#616160] text-xs">
+                      <code className="font-mono text-xs text-[#616160]">{item.timestamp}</code>
                     </td>
-                    <td className="py-2 px-2.5">
-                      <span className="rounded bg-[#3D2B1F] px-1.5 py-0.5 text-[11px] font-bold text-[#C5A059] border border-[#4E3727]">
-                        {seatNum}
-                      </span>
+                    <td className="py-2.5 px-2.5 text-[#0a0a0a] font-medium truncate max-w-[100px]">
+                      {item.user_id?.includes("alpha")
+                        ? "Device A"
+                        : item.user_id?.includes("beta")
+                        ? "Device B"
+                        : "Primary User"}
                     </td>
-                    <td className="py-2 px-2.5">
+                    <td className="py-2.5 px-2.5 font-bold text-[#0a0a0a]">
+                      {seat}
+                    </td>
+                    <td className="py-2.5 px-2.5">
+                      {isSuccess ? (
+                        <span className="flex items-center gap-1.5 font-medium text-[#065f46]">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>Acquired (atomic)</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 font-medium text-[#9f1239]">
+                          <ShieldAlert className="h-3.5 w-3.5" />
+                          <span>Blocked (conflict)</span>
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[#616160]">
+                      <code className="font-mono text-xs text-[#616160]">{gateMs}ms</code>
+                    </td>
+                    <td className="py-2.5 px-2.5">
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                          isConfirmed
-                            ? "border border-[#588157]/40 bg-[#1F2D1F] text-[#8FBC8F]"
-                            : isContested
-                            ? "border border-red-500/50 bg-red-950/80 text-red-400"
-                            : "border border-[#E07A5F]/40 bg-[#2D1B17] text-[#E07A5F]"
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                          isSuccess
+                            ? "bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46]"
+                            : "bg-[#fff1f2] border border-[#fecdd3] text-[#9f1239]"
                         }`}
                       >
-                        {isConfirmed ? (
-                          <ShieldCheck className="h-2.5 w-2.5" />
-                        ) : isContested ? (
-                          <Flame className="h-2.5 w-2.5 animate-pulse" />
-                        ) : (
-                          <AlertCircle className="h-2.5 w-2.5" />
-                        )}
-                        {item.statusCode === 201
-                          ? "Confirmed 201"
-                          : item.statusCode === 200
-                          ? "Idempotent 200"
-                          : item.contested
-                          ? "Contention 409"
-                          : "Sold Out 409"}
+                        {isSuccess ? "201 Created" : "409 Conflict"}
                       </span>
-                    </td>
-                    <td className="py-2 px-2.5 text-[#8FBC8F] text-[11px]">
-                      {item.gateLatencyMs ? `${item.gateLatencyMs} ms` : `${item.durationMs} ms`}
-                    </td>
-                    <td className="py-2 px-2.5 text-[#D4B996]/70 truncate max-w-[120px] text-[10px]">
-                      {item.id || item.idempotency_key || "short-circuited"}
                     </td>
                   </tr>
                 );

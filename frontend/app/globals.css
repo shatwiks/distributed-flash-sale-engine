@@ -2,126 +2,121 @@
 
 @layer base {
   :root {
-    --craft-bg: #120d0a;
-    --craft-surface: #1e1611;
-    --craft-card: #2a1d17;
-    --craft-panel: #3d2b1f;
-    --craft-border: #4e3727;
-    --craft-border-light: #6b4d36;
-    --craft-brass: #c5a059;
-    --craft-parchment: #d4b996;
-    --craft-cream: #f5efeb;
-    --craft-terracotta: #e07a5f;
-    --craft-moss: #588157;
+    --bg-base: #f5f4f2;
+    --bg-card: #ffffff;
+    --bg-dark: #111111;
+    --text-primary: #0a0a0a;
+    --text-muted: #616160;
+    --text-light: #a1a1a1;
+    --border-subtle: #e5e3df;
+    --accent-emerald: #10b981;
+    --accent-rose: #e11d48;
   }
 
   body {
-    background-color: #120d0a;
-    color: #f5efeb;
+    background-color: #f5f4f2;
+    color: #0a0a0a;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    background-image: 
-      radial-gradient(ellipse at top left, rgba(61, 43, 31, 0.4) 0%, transparent 60%),
-      radial-gradient(ellipse at bottom right, rgba(140, 98, 57, 0.15) 0%, transparent 50%),
-      linear-gradient(180deg, #120d0a 0%, #17100c 50%, #120d0a 100%);
-    background-attachment: fixed;
-    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 }
 
-/* Tactile Craft Card Utility */
-.card-craft {
-  background: linear-gradient(145deg, #2a1d17 0%, #221712 100%);
-  border: 1px solid #4e3727;
-  box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.5),
-    0 10px 25px -5px rgba(0, 0, 0, 0.6);
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Taste Skill exact card and surface classes */
+.card-light {
+  background-color: #ffffff;
+  border: 1px solid #e5e3df;
   border-radius: 1rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.card-craft:hover {
-  border-color: #6b4d36;
+.card-dark {
+  background-color: #111111;
+  color: #ffffff;
+  border: 1px solid #222222;
+  border-radius: 1.25rem;
 }
 
-/* Polished Brass Button with Press Physics */
-.btn-brass {
-  background: linear-gradient(180deg, #d6b26a 0%, #c5a059 40%, #a4823e 100%);
-  color: #120d0a;
+.surface-inset {
+  background-color: #f5f4f2;
+  border: 1px solid #e5e3df;
+  border-radius: 0.75rem;
+}
+
+.surface-inset-dark {
+  background-color: #1c1c1c;
+  border: 1px solid #2e2e2e;
+  border-radius: 0.75rem;
+}
+
+/* Primary Action Button: Solid Black Pill */
+.btn-black {
+  background-color: #0a0a0a;
+  color: #ffffff;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
-    inset 0 -2px 0 0 rgba(0, 0, 0, 0.35),
-    0 4px 12px rgba(0, 0, 0, 0.4);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.15s ease;
+  border-radius: 9999px;
+  transition-property: background-color, transform;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-brass:hover:not(:disabled) {
-  background: linear-gradient(180deg, #e0bf79 0%, #d1ab62 40%, #b28d44 100%);
-  box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.5),
-    inset 0 -2px 0 0 rgba(0, 0, 0, 0.4),
-    0 6px 18px rgba(197, 160, 89, 0.3);
+.btn-black:hover:not(:disabled) {
+  background-color: #262626;
   transform: translateY(-1px);
 }
 
-.btn-brass:active:not(:disabled) {
+.btn-black:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 
-    inset 0 2px 4px 0 rgba(0, 0, 0, 0.4),
-    0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Dark Wood Inset Container */
-.timber-inset {
-  background: #17100c;
-  border: 1px solid #3d2b1f;
-  box-shadow: 
-    inset 0 2px 6px 0 rgba(0, 0, 0, 0.6),
-    inset 0 0 1px 0 rgba(0, 0, 0, 0.8),
-    0 1px 0 0 rgba(255, 255, 255, 0.04);
-  border-radius: 0.75rem;
+/* Secondary Button: Clean White Pill */
+.btn-white {
+  background-color: #ffffff;
+  color: #0a0a0a;
+  font-weight: 600;
+  border: 1px solid #e5e3df;
+  border-radius: 9999px;
+  transition-property: background-color, transform;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-white:hover:not(:disabled) {
+  background-color: #edebe7;
+  transform: translateY(-1px);
+}
+
+.btn-white:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #17100c;
+  background: #f5f4f2;
 }
 ::-webkit-scrollbar-thumb {
-  background: #4e3727;
-  border-radius: 4px;
+  background: #d4d2ce;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #6b4d36;
-}
-
-/* Conflict Flash Animation for Terracotta Red Seat Collision */
-@keyframes contest-flash {
-  0%, 100% {
-    background-color: #dc2626;
-    border-color: #f87171;
-    box-shadow: 0 0 20px 4px rgba(220, 38, 38, 0.7);
-    transform: scale(1.06);
-  }
-  50% {
-    background-color: #991b1b;
-    border-color: #ef4444;
-    box-shadow: 0 0 8px 2px rgba(220, 38, 38, 0.4);
-    transform: scale(0.96);
-  }
-}
-
-.animate-contest {
-  animation: contest-flash 0.35s ease-in-out 4 alternate;
-}
-
-/* Screen Ambient Curve Glow */
-.screen-glow {
-  filter: drop-shadow(0 0 16px rgba(197, 160, 89, 0.45));
+  background: #0a0a0a;
 }

@@ -1,73 +1,102 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Cpu, Flame, Layers, Activity, Ticket } from "lucide-react";
+import { Ticket, Plus } from "lucide-react";
 import { HealthData } from "@/lib/api";
+import { motion } from "motion/react";
 
 interface NavbarProps {
   health: HealthData;
   onOpenCreateModal: () => void;
+  onNavigateToArena?: () => void;
+  onNavigateToDuel?: () => void;
 }
 
-export function Navbar({ health, onOpenCreateModal }: NavbarProps) {
+export function Navbar({ health, onOpenCreateModal, onNavigateToArena, onNavigateToDuel }: NavbarProps) {
   const isHealthy = health.status === "ok";
+  const gateLatency = health.redisLatencyMs || 1.2;
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#3D2B1F] bg-[#140E0B]/95 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        {/* Brand and Artisan Hall Tag */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#C5A059]/50 bg-gradient-to-br from-[#2A1E18] to-[#1C1512] text-[#C5A059] shadow-brassGlow">
-            <Ticket className="h-5 w-5 text-[#C5A059]" />
+    <header className="sticky top-0 z-40 w-full bg-[#f5f4f2]/90 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        
+        {/* Brand */}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="flex items-center gap-3 cursor-pointer"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0a0a0a] text-white">
+            <Ticket className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-serif text-lg font-bold tracking-tight text-[#F7F2EA]">
-                GRAND ARTISAN HALL
+              <span className="text-base font-bold tracking-tight text-[#0a0a0a]">
+                Flash-Sale Engine
               </span>
-              <span className="rounded border border-[#8C6239]/60 bg-[#2A1E18] px-2 py-0.5 text-[9px] font-mono tracking-widest text-[#C5A059] uppercase">
-                Acoustic Concurrency
+              <span className="hidden sm:inline-block rounded-full bg-[#e5e3df] px-2.5 py-0.5 text-xs font-semibold text-[#0a0a0a]">
+                10k RPS
               </span>
             </div>
-            <p className="text-xs text-[#D4B996]/75">
-              Cinema &amp; Concert Reservation Engine • Redis Lua Atomic Gate
-            </p>
           </div>
-        </div>
+        </motion.div>
 
-        {/* System Architecture Pills & Health Badge */}
+        {/* Center Nav Links */}
+        <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-[#555555]">
+          <a
+            href="#live-arena"
+            className="hover:text-[#0a0a0a] transition-colors"
+          >
+            Live Arena
+          </a>
+          <button
+            onClick={onNavigateToDuel}
+            className="hover:text-[#0a0a0a] transition-colors cursor-pointer"
+          >
+            Duel Mode
+          </button>
+          <a
+            href="#architecture"
+            className="hover:text-[#0a0a0a] transition-colors"
+          >
+            Architecture
+          </a>
+          <a
+            href="#benchmarks"
+            className="hover:text-[#0a0a0a] transition-colors"
+          >
+            Benchmarks
+          </a>
+        </nav>
+
+        {/* Health & Action */}
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-lg border border-[#3D2B1F] bg-[#1C1512] px-3 py-1.5 md:flex">
-            <Cpu className="h-3.5 w-3.5 text-[#C5A059]" />
-            <span className="font-mono text-xs text-[#D4B996]">Redis 7 Lua Gate</span>
-            <span className="text-[#3D2B1F]">|</span>
-            <Layers className="h-3.5 w-3.5 text-[#8C6239]" />
-            <span className="font-mono text-xs text-[#D4B996]">PostgreSQL 16 Pool</span>
-          </div>
-
-          {/* Real-time Cluster State */}
-          <div className="flex items-center gap-2 rounded-lg border border-[#3D2B1F] bg-[#1C1512] px-3 py-1.5">
-            <span
+          <div className="flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs">
+            <motion.span
+              animate={isHealthy ? { scale: [1, 1.25, 1] } : {}}
+              transition={{ repeat: Infinity, duration: 2.5 }}
               className={`h-2 w-2 rounded-full ${
-                isHealthy
-                  ? "animate-pulse bg-[#588157] shadow-[0_0_8px_#588157]"
-                  : "bg-[#E07A5F] shadow-[0_0_8px_#E07A5F]"
+                isHealthy ? "bg-emerald-500" : "bg-rose-500"
               }`}
             />
-            <span className="font-mono text-xs font-semibold text-[#F7F2EA]">
-              {isHealthy ? "GATE ACTIVE" : "DEGRADED"}
+            <span className="text-[#333333] font-medium hidden sm:inline">
+              {isHealthy ? "Gate active" : "Degraded"}
+            </span>
+            <span className="text-[#0a0a0a] font-bold">
+              {gateLatency}ms
             </span>
           </div>
 
-          {/* Quick Create Event Button */}
-          <button
+          <motion.button
             onClick={onOpenCreateModal}
-            className="btn-brass flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold"
+            whileHover={{ scale: 1.04, y: -1 }}
+            whileTap={{ scale: 0.95 }}
+            className="btn-black flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer"
           >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">New Event</span>
-          </button>
+            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+            <span>New Event</span>
+          </motion.button>
         </div>
+
       </div>
     </header>
   );

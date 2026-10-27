@@ -1,16 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Skull,
   Clock,
-  RotateCcw,
-  AlertTriangle,
   Flame,
   CheckCircle2,
-  ArrowRight,
-  ShieldAlert,
-  Layers,
 } from "lucide-react";
 
 interface ChaosControlsProps {
@@ -21,7 +17,7 @@ interface ChaosControlsProps {
   lastCrashReport: {
     seatNumber: string;
     message: string;
-    step: number; // 1: Redis Decr, 2: DB Crash, 3: Compensating INCRBY, 4: Restored
+    step: number;
   } | null;
 }
 
@@ -33,38 +29,43 @@ export function ChaosControls({
   lastCrashReport,
 }: ChaosControlsProps) {
   return (
-    <div className="card-craft border-[#4E3727] bg-[#1C1512] p-5 shadow-card">
-      <div className="flex items-center justify-between pb-3 border-b border-[#3D2B1F]">
+    <div className="card-light p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-3.5">
         <div className="flex items-center gap-2">
-          <Skull className="h-4 w-4 text-[#E07A5F]" />
-          <h3 className="font-serif text-sm font-bold text-[#F7F2EA] uppercase tracking-wider">
-            Chaos Engineering Rack &amp; Rollback Kill-Switch
+          <Skull className="h-4 w-4 text-[#0a0a0a]" />
+          <h3 className="text-sm font-semibold text-[#0a0a0a]">
+            Chaos engineering and saga rollback
           </h3>
         </div>
-        <span className="rounded bg-[#E07A5F]/20 px-2 py-0.5 font-mono text-[10px] text-[#E07A5F] border border-[#E07A5F]/30">
-          Saga Failure Testing
+        <span className="rounded-full bg-[#f5f4f2] border border-[#e5e3df] px-2.5 py-0.5 text-xs text-[#0a0a0a] font-medium">
+          Fault injection rack
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-        {/* Control 1: Inject Database Latency (+3000ms) */}
-        <div className="timber-inset p-3.5 flex flex-col justify-between">
+      {/* Controls Grid */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+        
+        {/* Toggle 1: Database Latency */}
+        <div className="bg-[#f5f4f2] border border-[#e5e3df] rounded-xl p-3.5 flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-[#C5A059]" />
+              <Clock className="h-4 w-4 text-[#0a0a0a]" />
               <div>
-                <span className="font-bold text-[#F7F2EA]">Inject DB Latency</span>
-                <p className="text-[10px] text-[#D4B996]/60">Delay PostgreSQL write by +3000ms</p>
+                <span className="font-bold text-[#0a0a0a] block">Inject DB latency</span>
+                <p className="text-xs text-[#616160]">Delay DB write by 3000ms</p>
               </div>
             </div>
 
             <button
               onClick={() => onToggleLatency(!injectLatency)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${
-                injectLatency ? "bg-[#C5A059]" : "bg-[#2A1E18]"
+              className={`relative h-6 w-11 rounded-full transition-colors cursor-pointer ${
+                injectLatency ? "bg-[#0a0a0a]" : "bg-[#d4d2ce]"
               }`}
             >
-              <span
+              <motion.span
+                layout
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                   injectLatency ? "translate-x-6" : "translate-x-1"
                 }`}
@@ -72,84 +73,111 @@ export function ChaosControls({
             </button>
           </div>
 
-          <div className="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-[#3D2B1F]/60">
-            <span className="text-[#D4B996]/70">Redis Gate:</span>
-            <span className="text-[#8FBC8F]">&lt; 2ms (Zero Leakage)</span>
+          <div className="mt-3 flex items-center justify-between text-xs pt-2">
+            <span className="text-[#616160]">Redis Gate:</span>
+            <span className="text-emerald-700 font-semibold">&lt; 2ms (Isolated)</span>
           </div>
         </div>
 
-        {/* Control 2: Simulate Database Crash (Compensating Rollback) */}
-        <div className="timber-inset p-3.5 flex flex-col justify-between">
+        {/* Toggle 2: Simulate Database Crash */}
+        <div className="bg-[#f5f4f2] border border-[#e5e3df] rounded-xl p-3.5 flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <Flame className="h-4 w-4 text-[#E07A5F]" />
+              <Flame className="h-4 w-4 text-[#0a0a0a]" />
               <div>
-                <span className="font-bold text-[#F7F2EA]">Crash DB Commit</span>
-                <p className="text-[10px] text-[#D4B996]/60">Trigger Saga compensating rollback</p>
+                <span className="font-bold text-[#0a0a0a] block">Crash DB write</span>
+                <p className="text-xs text-[#616160]">Trigger compensating saga</p>
               </div>
             </div>
 
-            <button
+            <motion.button
               onClick={onSimulateCrash}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.95 }}
               disabled={isCrashing}
-              className="rounded-md border border-[#E07A5F]/60 bg-gradient-to-b from-[#3D1E18] to-[#2A1410] px-3 py-1 text-[11px] font-bold text-[#F7F2EA] hover:border-[#E07A5F] active:translate-y-0.5 disabled:opacity-40"
+              className="btn-black rounded-full px-3.5 py-1.5 text-xs font-semibold disabled:opacity-40 cursor-pointer"
             >
               {isCrashing ? "Rolling Back..." : "Trigger Crash"}
-            </button>
+            </motion.button>
           </div>
 
-          <div className="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-[#3D2B1F]/60">
-            <span className="text-[#D4B996]/70">Rollback Mechanism:</span>
-            <span className="text-[#C5A059]">Redis INCRBY &amp; SREM</span>
+          <div className="mt-3 flex items-center justify-between text-xs pt-2">
+            <span className="text-[#616160]">Compensating:</span>
+            <span className="text-rose-700 font-semibold">INCRBY (+1)</span>
           </div>
         </div>
+
       </div>
 
-      {/* Real-time Saga Rollback Animated Pipeline */}
-      {lastCrashReport && (
-        <div className="mt-4 rounded-xl border border-[#E07A5F]/40 bg-gradient-to-r from-[#2A1410] to-[#1C1512] p-4 text-xs font-mono animate-in fade-in duration-300">
-          <div className="flex items-center gap-2 pb-2 text-[#E07A5F] font-bold">
-            <ShieldAlert className="h-4 w-4 animate-pulse" />
-            <span>Saga Compensating Rollback Live Flow:</span>
-          </div>
+      {/* 4-Step Saga Stepper Visualizer with progress tracking */}
+      <div className="mt-4 bg-[#f5f4f2] border border-[#e5e3df] rounded-xl p-3.5 text-xs">
+        <span className="text-xs text-[#616160] block mb-2 font-semibold">
+          Two-phase saga transaction stepper
+        </span>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-            {/* Step 1: Redis Gate */}
-            <div className="flex items-center gap-1 rounded bg-[#1C1512] px-2.5 py-1 text-[#8FBC8F] border border-[#3D2B1F]">
-              <CheckCircle2 className="h-3 w-3" />
-              <span>1. Redis DECR: Seat {lastCrashReport.seatNumber}</span>
-            </div>
+        <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
+          <motion.div
+            animate={lastCrashReport ? { scale: [1, 1.06, 1] } : {}}
+            transition={{ duration: 0.3 }}
+            className={`p-1.5 rounded-lg transition-colors ${
+              lastCrashReport ? "bg-[#0a0a0a] text-white font-semibold" : "bg-white border border-[#e5e3df] text-[#616160]"
+            }`}
+          >
+            1. Redis DECR
+          </motion.div>
 
-            <ArrowRight className="h-3 w-3 text-[#D4B996]/50" />
+          <motion.div
+            animate={lastCrashReport ? { scale: [1, 1.06, 1] } : {}}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className={`p-1.5 rounded-lg transition-colors ${
+              lastCrashReport ? "bg-[#0a0a0a] text-white font-semibold" : "bg-white border border-[#e5e3df] text-[#616160]"
+            }`}
+          >
+            2. DB Begin
+          </motion.div>
 
-            {/* Step 2: DB Crash */}
-            <div className="flex items-center gap-1 rounded bg-red-950/80 px-2.5 py-1 text-red-300 border border-red-800">
-              <AlertTriangle className="h-3 w-3" />
-              <span>2. Postgres Crash (Commit Failed)</span>
-            </div>
+          <motion.div
+            animate={lastCrashReport ? { scale: [1, 1.08, 1] } : {}}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className={`p-1.5 rounded-lg transition-colors ${
+              lastCrashReport ? "bg-[#e11d48] text-white font-bold" : "bg-white border border-[#e5e3df] text-[#616160]"
+            }`}
+          >
+            3. DB Crash
+          </motion.div>
 
-            <ArrowRight className="h-3 w-3 text-[#D4B996]/50" />
-
-            {/* Step 3: Compensating Undo */}
-            <div className="flex items-center gap-1 rounded bg-[#2A1E18] px-2.5 py-1 text-[#C5A059] border border-[#C5A059]/40">
-              <RotateCcw className="h-3 w-3 animate-spin" />
-              <span>3. Redis INCRBY (+1) Compensate</span>
-            </div>
-
-            <ArrowRight className="h-3 w-3 text-[#D4B996]/50" />
-
-            {/* Step 4: Restored */}
-            <div className="flex items-center gap-1 rounded bg-[#1F2D1F] px-2.5 py-1 text-[#8FBC8F] border border-[#8FBC8F]/50 font-bold">
-              <CheckCircle2 className="h-3 w-3" />
-              <span>4. Stock Restored (0 Leaks)</span>
-            </div>
-          </div>
-
-          <p className="mt-2.5 text-[10px] text-[#D4B996]/70 leading-normal">
-            {lastCrashReport.message}
-          </p>
+          <motion.div
+            animate={lastCrashReport ? { scale: [1, 1.08, 1] } : {}}
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className={`p-1.5 rounded-lg transition-colors ${
+              lastCrashReport ? "bg-[#10b981] text-white font-bold" : "bg-white border border-[#e5e3df] text-[#616160]"
+            }`}
+          >
+            4. INCRBY Rollback
+          </motion.div>
         </div>
-      )}
+
+        {/* Live Crash Report Output */}
+        <AnimatePresence>
+          {lastCrashReport && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              className="mt-3 p-3 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-xs text-[#065f46]"
+            >
+              <div className="flex items-center gap-1.5 font-bold text-[#065f46]">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Compensating Rollback Verified</span>
+              </div>
+              <p className="mt-1 text-[#047857] leading-snug">
+                {lastCrashReport.message}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

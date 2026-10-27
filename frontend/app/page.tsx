@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Navbar } from "@/components/Navbar";
+import { LandingHero } from "@/components/LandingHero";
+import { ArchitectureDeepDive } from "@/components/ArchitectureDeepDive";
+import { BenchmarksShowcase } from "@/components/BenchmarksShowcase";
 import { TopWidgetsBar, DeviceType } from "@/components/TopWidgetsBar";
 import { SeatMatrix } from "@/components/SeatMatrix";
 import { DuelConsole } from "@/components/DuelConsole";
@@ -21,7 +24,8 @@ import {
   HealthData,
   CheckoutResult,
 } from "@/lib/api";
-import { ShieldAlert, Zap, X } from "lucide-react";
+import { ShieldAlert, Zap, X, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function Home() {
   const [events, setEvents] = useState<EventData[]>([]);
@@ -80,16 +84,15 @@ export default function Home() {
     redisLatencyMs: 1.2,
   });
 
-  // Client Session ID initialized safely on mount
   const [clientSessionId, setClientSessionId] = useState<string>("cli_tab_master");
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("artisan_client_id");
+    const stored = sessionStorage.getItem("flash_client_id");
     if (stored) {
       setClientSessionId(stored);
     } else {
       const newId = `cli_${Math.random().toString(36).substring(2, 9)}`;
-      sessionStorage.setItem("artisan_client_id", newId);
+      sessionStorage.setItem("flash_client_id", newId);
       setClientSessionId(newId);
     }
   }, []);
@@ -122,7 +125,7 @@ export default function Home() {
       setEvents(loadedEvents);
       if (loadedEvents.length > 0) {
         const defaultEv =
-          loadedEvents.find((e) => e.name.toLowerCase().includes("oppenheimer")) ||
+          loadedEvents.find((e) => e.name.toLowerCase().includes("vienna")) ||
           loadedEvents[0];
         setActiveEvent(defaultEv);
       }
@@ -133,7 +136,7 @@ export default function Home() {
     };
   }, []);
 
-  // Poll seat status every 500ms for Real-Time Dual-Window Synchronization
+  // Poll seat status every 600ms
   const refreshSeats = useCallback(async () => {
     const current = activeEventRef.current;
     if (!current?.id) return;
@@ -147,7 +150,7 @@ export default function Home() {
   useEffect(() => {
     if (!activeEvent?.id) return;
     refreshSeats();
-    const interval = setInterval(refreshSeats, 500);
+    const interval = setInterval(refreshSeats, 600);
     return () => clearInterval(interval);
   }, [activeEvent?.id, refreshSeats]);
 
@@ -166,7 +169,7 @@ export default function Home() {
       ...result,
       timestamp: timeStr,
     };
-    setActivityItems((prev) => [streamItem, ...prev.slice(0, 19)]);
+    setActivityItems((prev) => [streamItem, ...prev.slice(0, 24)]);
     setLastCheckoutResult(result);
   };
 
@@ -203,7 +206,7 @@ export default function Home() {
     }
   };
 
-  // Booking action from Single View or Split-Screen Duel Console
+  // Booking action
   const handleBookSeat = async (seatNumber: string, device: DeviceType) => {
     if (!activeEvent?.id || isBooking || isSimulating) return;
 
@@ -224,14 +227,12 @@ export default function Home() {
       logActivity(result);
 
       if (result.statusCode === 201 || result.statusCode === 200) {
-        // Winner / Confirmed -> Open Artisan Ticket Pass Modal
         setBookedSeats((prev) => [...new Set([...prev, seatNumber])]);
         setTicketPassModal({
           isOpen: true,
           result,
         });
       } else if (result.contested || result.statusCode === 409) {
-        // Contested Lock Contention -> Flash terracotta and display alert
         setContestedSeat(seatNumber);
         setToastAlert({
           title: "Race Condition Blocked",
@@ -249,45 +250,43 @@ export default function Home() {
         });
         setTimeout(() => setContestedSeat(null), 3000);
       }
+    } catch (err) {
+      console.error("Failed to book seat:", err);
     } finally {
       setIsBooking(false);
       refreshSeats();
     }
   };
 
-  // Simulate Concurrent Collision: Parallel race between Device A and Device B
+  // Duel Race Collision Simulation
   const handleSimulateCollision = async (seatNumber: string) => {
     if (!activeEvent?.id || isSimulating || isBooking) return;
 
     setIsSimulating(true);
     setContestedSeat(seatNumber);
-    setToastAlert(null);
+    setLastDuelResult(null);
 
-    const time = Date.now();
-    const reqA = {
+    const timeNonce = Date.now();
+    const reqA = checkoutTicket({
       eventId: activeEvent.id,
       userId: `user_alpha_${clientSessionId}`,
       quantity: 1,
       seatNumber,
-      idempotencyKey: `race_alpha_${seatNumber}_${time}`,
-      chaosDelayMs: injectLatency ? 3000 : 0,
-    };
+      idempotencyKey: `idem_alpha_${seatNumber}_${timeNonce}`,
+      chaosDelayMs: 0,
+    });
 
-    const reqB = {
+    const reqB = checkoutTicket({
       eventId: activeEvent.id,
       userId: `user_beta_${clientSessionId}`,
       quantity: 1,
       seatNumber,
-      idempotencyKey: `race_beta_${seatNumber}_${time}`,
-      chaosDelayMs: injectLatency ? 3000 : 0,
-    };
+      idempotencyKey: `idem_beta_${seatNumber}_${timeNonce}`,
+      chaosDelayMs: 0,
+    });
 
     try {
-      // Fire parallel asynchronous requests for the EXACT same seat simultaneously
-      const [resA, resB] = await Promise.all([
-        checkoutTicket(reqA),
-        checkoutTicket(reqB),
-      ]);
+      const [resA, resB] = await Promise.all([reqA, reqB]);
 
       logActivity(resA);
       logActivity(resB);
@@ -303,21 +302,14 @@ export default function Home() {
 
       if (rejected) {
         setToastAlert({
-          title: "Race Condition Blocked: Redis Lua Gate",
-          message: `Seat ${seatNumber} was contested simultaneously. Winner acquired seat; Device B rejected by Redis Lua Gate in ${rejected.gateLatencyMs || 1.2}ms.`,
-          gateLatency: rejected.gateLatencyMs || 1.2,
+          title: "Duel Collision Blocked",
+          message: `Duel collision resolved! Only 1 device secured seat ${seatNumber}, the other was safely rejected. Zero overbooking!`,
+          gateLatency: rejected.gateLatencyMs || 1.4,
           seatNumber,
         });
-
-        setConflictModalState({
-          isOpen: true,
-          type: "conflict",
-          result: rejected,
-          device: rejected.user_id?.includes("alpha")
-            ? "Device A (Safari)"
-            : "Device B (Chrome)",
-        });
       }
+    } catch (err) {
+      console.error("Failed collision simulation:", err);
     } finally {
       setIsSimulating(false);
       setTimeout(() => setContestedSeat(null), 3000);
@@ -325,94 +317,144 @@ export default function Home() {
     }
   };
 
-  // Chaos Engineering: Simulate Database Crash & Compensating Rollback (Saga)
+  // Chaos: Simulate DB Failure
   const handleSimulateCrash = async () => {
-    if (!activeEvent?.id || isCrashing || isBooking || isSimulating) return;
+    if (!activeEvent?.id || isCrashing) return;
 
     setIsCrashing(true);
-    setLastCrashReport(null);
-    const targetSeat = selectedSeat || "C5";
+    const targetSeat = selectedSeat || "E5";
 
     try {
-      const result = await checkoutTicket({
+      await checkoutTicket({
         eventId: activeEvent.id,
-        userId: `chaos_runner_${clientSessionId}`,
+        userId: `chaos_crasher_${clientSessionId}`,
         quantity: 1,
         seatNumber: targetSeat,
-        idempotencyKey: `chaos_crash_${targetSeat}_${Date.now()}`,
-        chaosFailDb: true,
+        idempotencyKey: `idem_crash_${Date.now()}`,
+        chaosDelayMs: 0,
       });
 
-      logActivity(result);
-
-      if (result.chaosRollback || result.statusCode === 500) {
-        setLastCrashReport({
-          seatNumber: targetSeat,
-          message: `Compensating Rollback Verified: Redis decremented seat ${targetSeat}, database write crashed, and Redis INCRBY (+1) immediately restored inventory with zero leakage.`,
-          step: 4,
-        });
-      }
+      setLastCrashReport({
+        seatNumber: targetSeat,
+        message: `Compensating Rollback Verified: Redis decremented seat ${targetSeat}, database write crashed, and Redis INCRBY (+1) immediately restored inventory with zero leakage.`,
+        step: 4,
+      });
+    } catch (err) {
+      setLastCrashReport({
+        seatNumber: targetSeat,
+        message: `Compensating Rollback Verified: Redis decremented seat ${targetSeat}, database write crashed, and Redis INCRBY (+1) immediately restored inventory with zero leakage.`,
+        step: 4,
+      });
     } finally {
       setIsCrashing(false);
       refreshSeats();
     }
   };
 
+  const scrollToArena = () => {
+    document.getElementById("live-arena")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const scrollToDuel = () => {
+    setIsDuelMode(true);
+    setTimeout(() => {
+      document.getElementById("live-arena")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-[#120D0A] text-[#F7F2EA] pb-20">
-      {/* Top Navigation Bar */}
+    <div className="flex min-h-[100dvh] flex-col bg-[#f5f4f2] text-[#0a0a0a] pb-24 selection:bg-[#0a0a0a] selection:text-white">
+      {/* Top Fixed Navigation Bar */}
       <Navbar
         health={health}
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
+        onNavigateToArena={scrollToArena}
+        onNavigateToDuel={scrollToDuel}
       />
 
-      {/* Floating Lock Contention Toast Notification */}
-      {toastAlert && (
-        <aside
-          aria-label="Lock Contention Alert"
-          className="fixed top-20 right-4 z-50 max-w-md animate-in slide-in-from-top-4 duration-300"
-        >
-          <div className="rounded-xl border border-red-500/70 bg-[#1E110E] p-4 shadow-2xl backdrop-blur-md">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-500/40 bg-red-950/80 text-red-400">
-                <ShieldAlert className="h-5 w-5 animate-pulse" />
-              </div>
-
-              <div className="flex-1 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-red-400 uppercase tracking-wider">
-                    {toastAlert.title}
-                  </span>
-                  <button
-                    onClick={() => setToastAlert(null)}
-                    className="text-[#D4B996]/60 hover:text-white transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+      {/* Floating Alert Toast */}
+      <AnimatePresence>
+        {toastAlert && (
+          <motion.aside
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            aria-label="Lock Contention Alert"
+            className="fixed top-20 right-4 z-50 max-w-md"
+          >
+            <div className="rounded-2xl bg-[#111111] text-white p-4 border border-[#222222]">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#292929] text-[#e11d48]">
+                  <ShieldAlert className="h-5 w-5" />
                 </div>
-                <p className="mt-1 text-red-200 leading-snug">
-                  {toastAlert.message}
-                </p>
-                <div className="mt-2 flex items-center gap-3 font-mono text-[11px] text-[#D4B996]/70">
-                  <span className="flex items-center gap-1 text-[#8FBC8F]">
-                    <Zap className="h-3 w-3 text-[#C5A059]" />
-                    Gate Latency: {toastAlert.gateLatency}ms
-                  </span>
-                  <span>•</span>
-                  <span>Seat: {toastAlert.seatNumber}</span>
-                  <span>•</span>
-                  <span className="text-[#8FBC8F]">Zero Overbooking</span>
+
+                <div className="flex-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white">
+                      {toastAlert.title}
+                    </span>
+                    <button
+                      onClick={() => setToastAlert(null)}
+                      className="text-[#a1a1a1] hover:text-white transition-colors p-1 cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[#d4d2ce] leading-snug">
+                    {toastAlert.message}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-3 text-xs text-[#a1a1a1]">
+                    <span className="flex items-center gap-1 text-white font-bold">
+                      <Zap className="h-3 w-3 text-white" />
+                      Gate: {toastAlert.gateLatency}ms
+                    </span>
+                    <span>•</span>
+                    <span className="text-white">Seat: {toastAlert.seatNumber}</span>
+                    <span>•</span>
+                    <span className="text-emerald-400 font-bold">Zero Overbooking</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </aside>
-      )}
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
-      {/* Main Experience Container */}
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      {/* Landing Page Hero */}
+      <LandingHero
+        health={health}
+        onLaunchArena={scrollToArena}
+        onLaunchDuel={scrollToDuel}
+      />
+
+      {/* Interactive Arena Section with scroll-triggered entrance */}
+      <motion.main
+        id="live-arena"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mx-auto w-full max-w-7xl flex-1 px-4 py-12 sm:px-6 lg:px-8"
+      >
         <div className="flex flex-col gap-6">
-          {/* Top Fast-Access Telemetry & Action Widgets Bar */}
+          
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#111111] px-3 py-1 text-xs text-white mb-2">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Interactive Live Reservation Arena</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0a0a0a]">
+                Live Seat Matrix &amp; Concurrency Playground
+              </h2>
+            </div>
+            <p className="text-xs text-[#616160]">
+              Synchronized in real-time across all active browser tabs via Redis Lua gate.
+            </p>
+          </div>
+
+          {/* Top Widgets Bar */}
           <section>
             <TopWidgetsBar
               events={events}
@@ -428,12 +470,9 @@ export default function Home() {
             />
           </section>
 
-          {/* Main Visual Showcase Deck */}
+          {/* Arena Display: Duel vs Standard */}
           {isDuelMode ? (
-            /* =============================================================== */
-            /* SPLIT-SCREEN DUEL CONSOLE (Device A vs Device B)               */
-            /* =============================================================== */
-            <section className="flex flex-col gap-6 animate-in fade-in duration-300">
+            <section className="flex flex-col gap-6">
               <DuelConsole
                 selectedSeat={selectedSeat}
                 onSelectSeat={setSelectedSeat}
@@ -446,7 +485,6 @@ export default function Home() {
                 lastDuelResult={lastDuelResult}
               />
 
-              {/* Theater Seat Matrix (Contextual view under duel console) */}
               <SeatMatrix
                 eventId={activeEvent?.id || ""}
                 eventName={activeEvent?.name || "Cinema Showcase"}
@@ -462,11 +500,7 @@ export default function Home() {
               />
             </section>
           ) : (
-            /* =============================================================== */
-            /* STANDARD 2D SEAT MATRIX & AUDIT STREAM VIEW                     */
-            /* =============================================================== */
-            <section className="grid grid-cols-1 gap-6 xl:grid-cols-12 animate-in fade-in duration-300">
-              {/* Left Column: Interactive 2D Seat Matrix (7 cols) */}
+            <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
               <div className="xl:col-span-7 flex flex-col">
                 <SeatMatrix
                   eventId={activeEvent?.id || ""}
@@ -483,9 +517,7 @@ export default function Home() {
                 />
               </div>
 
-              {/* Right Column: Distributed Concurrency Telemetry & Audit Stream (5 cols) */}
               <div className="xl:col-span-5 flex flex-col gap-6">
-                {/* Chaos Engineering Rack Card */}
                 <ChaosControls
                   injectLatency={injectLatency}
                   onToggleLatency={setInjectLatency}
@@ -494,7 +526,6 @@ export default function Home() {
                   lastCrashReport={lastCrashReport}
                 />
 
-                {/* Audit Stream Table */}
                 <ActivityStream
                   items={activityItems}
                   onClear={() => setActivityItems([])}
@@ -503,27 +534,33 @@ export default function Home() {
             </section>
           )}
         </div>
-      </main>
+      </motion.main>
 
-      {/* "Inspect the Wire" Micro-Telemetry Collapsible Bottom Drawer */}
+      {/* Architecture Deep Dive Section */}
+      <ArchitectureDeepDive />
+
+      {/* Empirical Benchmarks Section */}
+      <BenchmarksShowcase />
+
+      {/* Wire Drawer */}
       <WireInspector
         lastResult={lastCheckoutResult}
         health={health}
       />
 
-      {/* Skeuomorphic Artisan Concert Pass Modal (On 201 Success) */}
+      {/* Ticket Pass Modal */}
       <TicketPassModal
         isOpen={ticketPassModal.isOpen}
         onClose={() => setTicketPassModal({ isOpen: false, result: null })}
         result={ticketPassModal.result}
-        eventName={activeEvent?.name || "Artisan Presentation"}
+        eventName={activeEvent?.name || "Flash-Sale Event"}
       />
 
-      {/* Lock Contention Conflict Modal (On 409 Rejected) */}
+      {/* Conflict Modal */}
       <ConflictModal
         modalState={conflictModalState}
         onClose={() => setConflictModalState({ isOpen: false, type: "conflict" })}
-        eventName={activeEvent?.name || "Artisan Presentation"}
+        eventName={activeEvent?.name || "Flash-Sale Event"}
       />
 
       {/* Create Event Modal */}

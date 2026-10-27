@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { X, Sparkles, QrCode, Ticket, CheckCircle2, Zap } from "lucide-react";
+import { motion } from "motion/react";
+import { X, Sparkles, Ticket, CheckCircle2 } from "lucide-react";
 import { CheckoutResult } from "@/lib/api";
 
 interface TicketPassModalProps {
@@ -24,135 +25,137 @@ export function TicketPassModal({
   const isVip = row === "E" || row === "F";
   const isAcoustic = row === "C" || row === "D";
   const tierName = isVip
-    ? "Royal Box / VIP Suite"
+    ? "Royal Box, VIP Suite"
     : isAcoustic
     ? "Acoustic Sweet Spot"
     : "Standard Orchestra Stalls";
   const price = isVip ? "$45.00" : isAcoustic ? "$25.00" : "$18.50";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28 }}
+        className="relative w-full max-w-xl"
+      >
         {/* Close Button */}
-        <button
+        <motion.button
           onClick={onClose}
-          className="absolute -top-3 -right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-[#4E3727] bg-[#1C1512] text-[#D4B996] hover:border-[#C5A059] hover:text-[#F7F2EA] transition-all shadow-lg"
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute -top-3 -right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] border border-[#333333] text-[#a1a1a1] hover:text-white transition-colors cursor-pointer"
         >
           <X className="h-4 w-4" />
-        </button>
+        </motion.button>
 
-        {/* Skeuomorphic Artisan Concert Pass Card */}
-        <div className="relative flex flex-col md:flex-row overflow-hidden rounded-2xl border-2 border-[#8C6239]/60 bg-gradient-to-br from-[#2A1E18] via-[#1C1512] to-[#140E0B] shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.1)]">
-          {/* Embossed Brass Grain Border Ribbon */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#8C6239] via-[#C5A059] to-[#8C6239]" />
-
-          {/* Main Body (Left / Top on mobile) */}
+        {/* Digital Boarding Pass */}
+        <div className="relative flex flex-col md:flex-row overflow-hidden rounded-2xl bg-[#111111] border border-[#222222] text-white">
+          
+          {/* Main Body */}
           <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
             <div>
-              {/* Header Badge */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 rounded-full border border-[#C5A059]/40 bg-[#3D2B1F]/60 px-3 py-1 text-[10px] font-bold tracking-widest text-[#C5A059] uppercase">
-                  <Sparkles className="h-3 w-3" />
-                  <span>Artisan Hall Admission</span>
+                <div className="flex items-center gap-1.5 rounded-full bg-[#292929] px-3 py-1 text-xs font-semibold text-white">
+                  <Sparkles className="h-3 w-3 text-white" />
+                  <span>Confirmed Admission Pass</span>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] font-mono text-[#8FBC8F]">
+                <div className="flex items-center gap-1 text-xs text-emerald-400 font-bold">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Secured in {result.gateLatencyMs || 1.2}ms</span>
                 </div>
               </div>
 
-              {/* Event Name & Hall */}
-              <h2 className="mt-4 font-serif text-2xl font-bold tracking-tight text-[#F7F2EA]">
+              {/* Event Name */}
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">
                 {eventName}
               </h2>
-              <p className="mt-1 text-xs text-[#D4B996]/80 tracking-wide font-serif">
-                Vienna Konzerthaus • Grand Acoustic Auditorium
+              <p className="mt-1 text-xs text-[#a1a1a1] tracking-wide">
+                Vienna Konzerthaus, Grand Laser Acoustic Hall
               </p>
             </div>
 
             {/* Middle Specs Grid */}
-            <div className="my-6 grid grid-cols-2 gap-4 border-y border-[#3D2B1F] py-4 text-xs font-mono">
+            <div className="my-6 grid grid-cols-2 gap-4 p-4 rounded-xl bg-[#1c1c1c] text-xs">
               <div>
-                <span className="text-[10px] text-[#D4B996]/50 uppercase tracking-wider">
+                <span className="text-xs text-[#a1a1a1] block">
                   Tier / Section
                 </span>
-                <p className="font-semibold text-[#F7F2EA] truncate">{tierName}</p>
+                <p className="font-bold text-white truncate mt-0.5">{tierName}</p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#D4B996]/50 uppercase tracking-wider">
-                  Tier Price
+                <span className="text-xs text-[#a1a1a1] block">
+                  Price Tariff
                 </span>
-                <p className="font-bold text-[#C5A059]">{price}</p>
+                <p className="font-bold text-white mt-0.5">{price}</p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#D4B996]/50 uppercase tracking-wider">
-                  User Holder
+                <span className="text-xs text-[#a1a1a1] block">
+                  Order UUID
                 </span>
-                <p className="font-semibold text-[#F7F2EA] truncate">
-                  {result.user_id || "user_alpha"}
-                </p>
+                <code className="text-xs text-[#d4d2ce] truncate mt-0.5 font-mono block">
+                  {result.id || `ord_${Math.random().toString(36).substring(2, 10)}`}
+                </code>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#D4B996]/50 uppercase tracking-wider">
-                  Idempotency UUID
+                <span className="text-xs text-[#a1a1a1] block">
+                  Concurrency Gate
                 </span>
-                <p className="font-mono text-[11px] text-[#D4B996]/80 truncate">
-                  {result.idempotency_key?.slice(0, 16) || "idem_verified"}...
+                <p className="text-xs text-emerald-400 font-bold mt-0.5">
+                  Redis Lua O(1) Atomic
                 </p>
               </div>
             </div>
 
-            {/* Footer Action */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-[#D4B996]/40">
-                AUTH: {result.id || "tx_verified_01"}
+            {/* Bottom Controls */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#a1a1a1]">
+                Idempotency: <code>{result.idempotency_key?.slice(0, 16) || "idem_verified"}</code>...
               </span>
-              <button
+              <motion.button
                 onClick={onClose}
-                className="btn-brass rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider shadow-md hover:scale-105 transition-transform"
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.95 }}
+                className="btn-white px-5 py-2 text-xs font-semibold cursor-pointer"
               >
-                Close &amp; Reserve Another
-              </button>
+                Done
+              </motion.button>
             </div>
           </div>
 
-          {/* Perforated Divider Line */}
-          <div className="relative flex md:flex-col items-center justify-between border-t md:border-t-0 md:border-l-2 border-dashed border-[#8C6239]/40 bg-[#17100C]/50 px-4 md:px-0 py-2 md:py-4">
-            {/* Top Cutout Circle */}
-            <div className="hidden md:block absolute -top-4 left-1/2 h-7 w-7 -translate-x-1/2 rounded-full bg-[#120D0A] border border-[#4E3727]" />
-            {/* Bottom Cutout Circle */}
-            <div className="hidden md:block absolute -bottom-4 left-1/2 h-7 w-7 -translate-x-1/2 rounded-full bg-[#120D0A] border border-[#4E3727]" />
-          </div>
-
-          {/* Perforated Stub (Right side) */}
-          <div className="flex md:w-44 flex-col items-center justify-between border-t md:border-t-0 border-[#3D2B1F] bg-[#1E1611] p-6 text-center">
-            <span className="text-[10px] font-mono tracking-widest text-[#D4B996]/50 uppercase">
-              Seat Stub
-            </span>
-
-            {/* Giant Seat Number Badge */}
-            <div className="my-2 flex h-20 w-20 flex-col items-center justify-center rounded-2xl border-2 border-[#C5A059] bg-[#2A1E18] text-[#F7F2EA] shadow-brassGlow">
-              <span className="text-[9px] uppercase tracking-widest text-[#D4B996]/70">Seat</span>
-              <span className="font-serif text-3xl font-extrabold text-[#C5A059]">
-                {seatNumber}
+          {/* Right Ticket Stub */}
+          <div className="flex flex-col items-center justify-between bg-[#181818] p-6 text-center md:w-44">
+            <div className="flex flex-col items-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#292929] text-white">
+                <Ticket className="h-8 w-8" />
+              </div>
+              <span className="mt-3 text-xs text-[#a1a1a1]">
+                Seat Assignment
               </span>
-              <span className="text-[8px] font-mono text-[#8FBC8F]">ROW {row}</span>
+              <motion.span
+                initial={{ scale: 0.8 }}
+                animate={{ scale: [0.8, 1.15, 1] }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="text-3xl font-black text-white"
+              >
+                {seatNumber}
+              </motion.span>
             </div>
 
-            {/* Simulated QR Code Graphic */}
-            <div className="rounded-lg border border-[#4E3727] bg-[#140E0B] p-2 text-[#D4B996]">
-              <QrCode className="h-12 w-12 text-[#C5A059]" />
+            {/* Verification Tag */}
+            <div className="mt-6 flex flex-col items-center">
+              <span className="rounded-full bg-[#292929] px-2.5 py-1 text-[10px] font-semibold text-white">
+                Verified Gate Entry
+              </span>
             </div>
-
-            <span className="mt-2 text-[9px] font-mono text-[#D4B996]/40 uppercase tracking-wider">
-              Scan at Stage Gate
-            </span>
           </div>
+
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

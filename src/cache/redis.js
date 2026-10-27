@@ -11,7 +11,7 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
  * @returns {object}
  */
 function getRedisOptions(customOptions = {}) {
-  return {
+  const options = {
     retryStrategy(times) {
       // Exponential backoff: 50ms, 100ms, 150ms ... up to max 2000ms
       const delay = Math.min(times * 50, 2000);
@@ -19,9 +19,16 @@ function getRedisOptions(customOptions = {}) {
     },
     maxRetriesPerRequest: 3,
     enableReadyCheck: true,
-    connectTimeout: 5000,
+    connectTimeout: 10000,
     ...customOptions,
   };
+
+  // Support TLS without strict CA rejection for cloud managed Redis (Upstash, Render, ElastiCache TLS)
+  if (REDIS_URL.startsWith('rediss://')) {
+    options.tls = options.tls || { rejectUnauthorized: false };
+  }
+
+  return options;
 }
 
 /**

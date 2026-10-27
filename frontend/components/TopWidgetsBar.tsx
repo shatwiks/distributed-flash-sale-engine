@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "motion/react";
 import {
   Film,
   Zap,
@@ -8,11 +9,7 @@ import {
   Smartphone,
   Laptop,
   RotateCcw,
-  CheckCircle2,
-  AlertTriangle,
   Swords,
-  Columns,
-  Square,
 } from "lucide-react";
 import { EventData, HealthData } from "@/lib/api";
 
@@ -44,143 +41,161 @@ export function TopWidgetsBar({
   isResetting,
 }: TopWidgetsBarProps) {
   const pool = health.pool || { total: 50, active: 2, idle: 48, waiting: 0 };
+  const gateLatency = health.redisLatencyMs || 1.2;
 
   return (
-    <div className="card-craft border-[#4E3727] bg-[#1C1512]/95 p-4 backdrop-blur-md">
+    <div className="card-light p-3 sm:p-4">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        {/* Left: Event Selector (Pills / Dropdown) */}
+        
+        {/* Left: Event Selection Pills with layoutId morphing */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 pr-2 text-xs font-semibold tracking-wider text-[#D4B996] uppercase">
-            <Film className="h-4 w-4 text-[#C5A059]" />
-            <span>Hall Event:</span>
+          <div className="flex items-center gap-1.5 pr-2 text-xs font-semibold text-[#616160]">
+            <Film className="h-4 w-4 text-[#0a0a0a]" />
+            <span>Active event:</span>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {events.slice(0, 3).map((ev) => {
               const isActive = ev.id === activeEventId;
               return (
-                <button
+                <motion.button
                   key={ev.id}
                   onClick={() => onSelectEvent(ev.id)}
-                  className={`group relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.96 }}
+                  className={`relative flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs transition-colors cursor-pointer ${
                     isActive
-                      ? "border border-[#C5A059] bg-[#2A1E18] text-[#F7F2EA] shadow-brassGlow"
-                      : "border border-[#3D2B1F] bg-[#140E0B] text-[#D4B996]/70 hover:border-[#6B4D36] hover:text-[#F7F2EA]"
+                      ? "text-white font-semibold"
+                      : "bg-[#f5f4f2] text-[#444444] hover:text-[#0a0a0a] hover:bg-[#edebe7] border border-[#e5e3df] font-medium"
                   }`}
                 >
+                  {isActive && (
+                    <motion.span
+                      layoutId="activeEventPill"
+                      transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                      className="absolute inset-0 bg-[#0a0a0a] rounded-full z-0"
+                    />
+                  )}
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      isActive ? "bg-[#C5A059] animate-pulse" : "bg-[#4E3727]"
+                    className={`relative z-10 h-1.5 w-1.5 rounded-full ${
+                      isActive ? "bg-white" : "bg-[#616160]"
                     }`}
                   />
-                  <span>{ev.name}</span>
+                  <span className="relative z-10">{ev.name}</span>
                   <span
-                    className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
+                    className={`relative z-10 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                       isActive
-                        ? "bg-[#C5A059]/20 text-[#C5A059]"
-                        : "bg-[#1C1512] text-[#D4B996]/50"
+                        ? "bg-[#292929] text-white"
+                        : "bg-[#e5e3df] text-[#616160]"
                     }`}
                   >
                     60 Seats
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
         </div>
 
-        {/* Right Controls: Telemetry, Duel Mode Toggle, Device Switcher, Reset */}
+        {/* Right Controls */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Real-Time Latency & Pool Indicators */}
-          <div className="flex items-center gap-2.5 rounded-lg border border-[#3D2B1F] bg-[#140E0B] px-3 py-1.5 font-mono text-xs">
-            {/* Redis Gate Latency */}
-            <div className="flex items-center gap-1.5 text-[#D4B996]" title="Sub-2ms in-memory Lua concurrency check">
-              <Zap className="h-3.5 w-3.5 text-[#C5A059]" />
-              <span className="text-[11px] text-[#D4B996]/70">Redis Gate:</span>
-              <span className="font-semibold text-[#8FBC8F]">
-                &lt; 2ms
-              </span>
+          
+          {/* Micro Telemetry Indicator */}
+          <div className="flex items-center gap-2.5 rounded-full bg-[#f5f4f2] border border-[#e5e3df] px-3.5 py-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-[#616160]">
+              <Zap className="h-3.5 w-3.5 text-[#0a0a0a]" />
+              <span>Gate:</span>
+              <span className="font-bold text-[#0a0a0a]">{gateLatency}ms</span>
             </div>
 
-            <span className="text-[#3D2B1F]">|</span>
+            <span className="text-[#616160]">•</span>
 
-            {/* PostgreSQL Pool Health & Active Clients */}
-            <div className="flex items-center gap-1.5 text-[#D4B996]" title={`Postgres Pool: ${pool.active} active, ${pool.idle} idle`}>
-              <Database className="h-3.5 w-3.5 text-[#8C6239]" />
-              <span className="text-[11px] text-[#D4B996]/70">Pool:</span>
-              {health.services.postgres === "up" ? (
-                <span className="flex items-center gap-1 text-[#8FBC8F]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#8FBC8F] animate-pulse" />
-                  Healthy ({pool.active}/{pool.total})
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[#E07A5F]">
-                  <AlertTriangle className="h-3 w-3" />
-                  Down
-                </span>
-              )}
+            <div className="flex items-center gap-1.5 text-[#616160]">
+              <Database className="h-3.5 w-3.5 text-[#616160]" />
+              <span>Pool:</span>
+              <span className="font-semibold text-[#0a0a0a]">
+                {pool.active}/{pool.total}
+              </span>
             </div>
           </div>
 
-          {/* Split-Screen Duel Mode Toggle */}
-          <button
+          {/* Mode Switcher */}
+          <motion.button
             onClick={() => onToggleDuelMode(!isDuelMode)}
-            className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.96 }}
+            className={`flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
               isDuelMode
-                ? "border-[#C5A059] bg-[#3D2B1F] text-[#F7F2EA] shadow-brassGlow"
-                : "border-[#4E3727] bg-[#17100C] text-[#D4B996]/70 hover:border-[#6B4D36] hover:text-[#F7F2EA]"
+                ? "bg-[#0a0a0a] text-white"
+                : "bg-[#f5f4f2] border border-[#e5e3df] text-[#444444] hover:text-[#0a0a0a] hover:bg-[#edebe7]"
             }`}
-            title="Toggle between Single Seat Matrix and Side-by-Side Dual Device Race Duel"
           >
-            <Swords className={`h-3.5 w-3.5 ${isDuelMode ? "text-[#C5A059]" : "text-[#8C6239]"}`} />
-            <span>{isDuelMode ? "Duel Split-Screen: ON" : "Split-Screen Duel"}</span>
-          </button>
+            <Swords className={`h-3.5 w-3.5 ${isDuelMode ? "text-white" : "text-[#616160]"}`} />
+            <span>{isDuelMode ? "Duel Console: Active" : "Duel Mode"}</span>
+          </motion.button>
 
-          {/* Device Simulator Toggle (Active when not in duel mode) */}
+          {/* Device Switcher with morphing spring indicator */}
           {!isDuelMode && (
-            <div className="flex items-center rounded-lg border border-[#4E3727] bg-[#140E0B] p-0.5">
+            <div className="relative flex items-center rounded-full bg-[#f5f4f2] border border-[#e5e3df] p-1">
               <button
                 onClick={() => onToggleDevice("device_a")}
-                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                className={`relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
                   activeDevice === "device_a"
-                    ? "border border-[#C5A059]/60 bg-[#2A1E18] text-[#F7F2EA] shadow-sm"
-                    : "text-[#D4B996]/60 hover:text-[#F7F2EA]"
+                    ? "text-white font-semibold"
+                    : "text-[#616160] hover:text-[#0a0a0a]"
                 }`}
-                title="Device A (MacBook / Safari)"
               >
-                <Laptop className="h-3.5 w-3.5 text-[#C5A059]" />
-                <span>Device A</span>
+                {activeDevice === "device_a" && (
+                  <motion.span
+                    layoutId="activeDeviceSwitch"
+                    transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                    className="absolute inset-0 bg-[#0a0a0a] rounded-full z-0"
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <Laptop className="h-3.5 w-3.5" />
+                  <span>Device A</span>
+                </span>
               </button>
 
               <button
                 onClick={() => onToggleDevice("device_b")}
-                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                className={`relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
                   activeDevice === "device_b"
-                    ? "border border-[#E07A5F]/60 bg-[#2A1E18] text-[#F7F2EA] shadow-sm"
-                    : "text-[#D4B996]/60 hover:text-[#F7F2EA]"
+                    ? "text-white font-semibold"
+                    : "text-[#616160] hover:text-[#0a0a0a]"
                 }`}
-                title="Device B (Mobile / Chrome)"
               >
-                <Smartphone className="h-3.5 w-3.5 text-[#E07A5F]" />
-                <span>Device B</span>
+                {activeDevice === "device_b" && (
+                  <motion.span
+                    layoutId="activeDeviceSwitch"
+                    transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                    className="absolute inset-0 bg-[#0a0a0a] rounded-full z-0"
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <Smartphone className="h-3.5 w-3.5" />
+                  <span>Device B</span>
+                </span>
               </button>
             </div>
           )}
 
-          {/* Master Reset / Pre-Warm Button */}
-          <button
+          {/* Master Reset Button */}
+          <motion.button
             onClick={onResetSeats}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.96 }}
             disabled={isResetting}
-            className="flex items-center gap-1.5 rounded-lg border border-[#8C6239]/60 bg-gradient-to-b from-[#3D2B1F] to-[#2A1E18] px-3 py-1.5 text-xs font-medium text-[#F7F2EA] shadow-sm transition-all hover:border-[#C5A059] hover:from-[#4E3727] hover:to-[#34241C] active:translate-y-0.5 disabled:opacity-50"
-            title="Master Reset: Restore all 60 seats to Available and pre-warm Redis inventory"
+            className="flex items-center gap-1.5 rounded-full bg-[#f5f4f2] hover:bg-[#edebe7] border border-[#e5e3df] px-3.5 py-1.5 text-xs font-semibold text-[#0a0a0a] transition-colors disabled:opacity-50 cursor-pointer"
+            title="Pre-warm Redis inventory and restore all 60 seats"
           >
             <RotateCcw
-              className={`h-3.5 w-3.5 text-[#C5A059] ${
-                isResetting ? "animate-spin" : ""
-              }`}
+              className={`h-3.5 w-3.5 text-[#0a0a0a] ${isResetting ? "animate-spin" : ""}`}
             />
-            <span>{isResetting ? "Syncing..." : "Master Reset"}</span>
-          </button>
+            <span>{isResetting ? "Pre-Warming..." : "Master Reset"}</span>
+          </motion.button>
+
         </div>
       </div>
     </div>

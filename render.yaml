@@ -1,0 +1,41 @@
+# Render Blueprint Specification
+# To deploy automatically, connect this repo to Render and choose "New Blueprint Instance"
+# https://render.com/docs/blueprint-spec
+
+services:
+  # 1. Express.js High-Throughput Ticket Booking API
+  - type: web
+    name: ticket-booking-api
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm run migrate && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ticket-booking-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ticket-booking-redis
+          property: connectionString
+
+  # 2. Redis 7 High-Throughput Cache & Distributed Lock Engine
+  - type: redis
+    name: ticket-booking-redis
+    plan: starter
+    maxmemoryPolicy: noeviction
+    ipAllowList: [] # Internal private network only
+
+databases:
+  # 3. PostgreSQL 16 Relational Database
+  - name: ticket-booking-db
+    databaseName: ticket_booking_prod
+    user: postgres
+    plan: starter

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Sparkles, PlusCircle } from "lucide-react";
+import { motion } from "motion/react";
+import { X, Sparkles, PlusCircle, Loader2 } from "lucide-react";
 import { createEvent, EventData } from "@/lib/api";
 
 interface CreateEventModalProps {
@@ -26,7 +27,6 @@ export function CreateEventModal({
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
-
     try {
       const newEvent = await createEvent(name.trim(), totalTickets);
       onEventCreated(newEvent);
@@ -39,97 +39,100 @@ export function CreateEventModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="card-craft w-full max-w-md p-6 sm:p-8 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28 }}
+        className="card-light w-full max-w-md p-6 sm:p-8 relative"
+      >
         {/* Close Button */}
-        <button
+        <motion.button
           onClick={onClose}
-          className="absolute right-4 top-4 text-[#D4B996]/60 hover:text-[#F5EFEB] transition"
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute right-4 top-4 text-[#616160] hover:text-[#0a0a0a] transition-colors p-1 cursor-pointer"
         >
           <X className="h-5 w-5" />
-        </button>
+        </motion.button>
 
-        <h3 className="font-serif text-xl font-bold text-[#F5EFEB] flex items-center gap-2">
-          <PlusCircle className="h-5 w-5 text-[#C5A059]" />
-          Create Flash-Sale Event
+        <h3 className="text-xl font-bold text-[#0a0a0a] flex items-center gap-2">
+          <PlusCircle className="h-5 w-5 text-[#0a0a0a]" />
+          <span>Create Flash-Sale Event</span>
         </h3>
-        <p className="mt-1 text-xs text-[#D4B996]/70">
+        <p className="mt-1 text-xs text-[#616160]">
           Initializes an event in PostgreSQL and automatically pre-warms the Redis in-memory gate.
         </p>
 
         {error && (
-          <div className="mt-4 rounded-lg border border-[#E07A5F]/40 bg-[#2D1B17] p-2.5 text-xs text-[#E07A5F]">
+          <div className="mt-4 rounded-xl bg-[#fff1f2] border border-[#fecdd3] p-3 text-xs text-[#9f1239]">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4 text-xs">
           <div>
-            <label className="block text-xs font-mono font-medium text-[#D4B996]">
+            <label className="block text-[#0a0a0a] font-bold mb-1">
               Event Title
             </label>
             <input
               type="text"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required
-              className="timber-inset mt-1.5 w-full px-3 py-2 text-xs font-mono text-[#F5EFEB] focus:border-[#C5A059] focus:outline-none"
-              placeholder="e.g. World Tour Flash Sale"
+              placeholder="e.g. Vienna Philharmonic 2026"
+              className="w-full rounded-xl bg-[#f5f4f2] border border-[#e5e3df] px-3.5 py-2.5 text-[#0a0a0a] placeholder-[#a1a1a1] focus:outline-none focus:ring-1 focus:ring-[#0a0a0a] transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-mono font-medium text-[#D4B996]">
-              Total Ticket Inventory
+            <label className="block text-[#0a0a0a] font-bold mb-1">
+              Total Ticket Inventory (Quota)
             </label>
             <input
               type="number"
-              min="1"
-              max="100000"
+              required
+              min={1}
+              max={1000}
               value={totalTickets}
               onChange={(e) => setTotalTickets(parseInt(e.target.value, 10) || 1)}
-              required
-              className="timber-inset mt-1.5 w-full px-3 py-2 text-xs font-mono text-[#F5EFEB] focus:border-[#C5A059] focus:outline-none"
+              className="w-full rounded-xl bg-[#f5f4f2] border border-[#e5e3df] px-3.5 py-2.5 text-[#0a0a0a] placeholder-[#a1a1a1] focus:outline-none focus:ring-1 focus:ring-[#0a0a0a] transition-colors"
             />
-            <div className="mt-2 flex gap-2">
-              {[20, 50, 100, 500].map((preset) => (
-                <button
-                  type="button"
-                  key={preset}
-                  onClick={() => setTotalTickets(preset)}
-                  className="rounded border border-[#3D2B1F] bg-[#1E1611] px-2.5 py-1 text-[11px] font-mono text-[#D4B996] hover:border-[#6B4D36] hover:text-[#F5EFEB]"
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-2.5">
-            <button
+          <div className="mt-4 flex items-center justify-end gap-3 pt-3">
+            <motion.button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-[#3D2B1F] bg-[#1E1611] px-4 py-2 text-xs font-medium text-[#D4B996] hover:bg-[#2A1D17]"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="rounded-full px-4 py-2 text-[#616160] hover:text-[#0a0a0a] transition-colors font-medium cursor-pointer"
             >
               Cancel
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="submit"
-              disabled={isSubmitting}
-              className="btn-brass flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold"
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.95 }}
+              disabled={isSubmitting || !name.trim()}
+              className="btn-black flex items-center gap-1.5 px-5 py-2.5 font-semibold disabled:opacity-40 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
-                  <Sparkles className="h-3.5 w-3.5 animate-spin text-[#120D0A]" />
-                  <span>Creating...</span>
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <span>Provisioning...</span>
                 </>
               ) : (
-                <span>Launch Event</span>
+                <>
+                  <Sparkles className="h-4 w-4 text-white" />
+                  <span>Create &amp; Pre-Warm</span>
+                </>
               )}
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -7,15 +7,10 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Flash-Sale Engine | Real-Time Distributed Inventory Manager",
+  title: "Flash-Sale Engine | Real-Time Distributed Concurrency & Inventory",
   description:
-    "Enterprise-grade 10,000+ RPS flash-sale dashboard powered by atomic Redis Lua gates and PostgreSQL persistence.",
+    "Production-grade distributed flash-sale engine sustaining 10,000+ RPS burst throughput with guaranteed 0.00% overbooking via Redis Lua atomic gatekeeping and PostgreSQL persistence.",
 };
 
 export default function RootLayout({
@@ -26,9 +21,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-screen bg-[#120D0A] text-[#F5EFEB] selection:bg-[#C5A059] selection:text-[#120D0A]">
+      <body className="min-h-[100dvh] bg-[#f5f4f2] text-[#0a0a0a] font-sans selection:bg-[#0a0a0a] selection:text-[#ffffff]">
         {children}
       </body>
     </html>
