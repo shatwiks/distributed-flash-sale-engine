@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { LandingHero } from "@/components/LandingHero";
 import { ArchitectureDeepDive } from "@/components/ArchitectureDeepDive";
 import { BenchmarksShowcase } from "@/components/BenchmarksShowcase";
+import { Footer } from "@/components/Footer";
 import { TopWidgetsBar, DeviceType } from "@/components/TopWidgetsBar";
 import { SeatMatrix } from "@/components/SeatMatrix";
 import { DuelConsole } from "@/components/DuelConsole";
@@ -24,7 +25,7 @@ import {
   HealthData,
   CheckoutResult,
 } from "@/lib/api";
-import { ShieldAlert, Zap, X, Sparkles } from "lucide-react";
+import { ShieldAlert, Zap, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function Home() {
@@ -332,6 +333,7 @@ export default function Home() {
         seatNumber: targetSeat,
         idempotencyKey: `idem_crash_${Date.now()}`,
         chaosDelayMs: 0,
+        chaosFailDb: true,
       });
 
       setLastCrashReport({
@@ -363,7 +365,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#f5f4f2] text-[#0a0a0a] pb-24 selection:bg-[#0a0a0a] selection:text-white">
+    <div className="flex min-h-[100dvh] flex-col bg-[#f5f4f2] text-[#0a0a0a] selection:bg-[#0a0a0a] selection:text-white">
       {/* Top Fixed Navigation Bar */}
       <Navbar
         health={health}
@@ -424,6 +426,8 @@ export default function Home() {
       {/* Landing Page Hero */}
       <LandingHero
         health={health}
+        activeEvent={activeEvent}
+        bookedSeats={bookedSeats}
         onLaunchArena={scrollToArena}
         onLaunchDuel={scrollToDuel}
       />
@@ -431,31 +435,25 @@ export default function Home() {
       {/* Interactive Arena Section with scroll-triggered entrance */}
       <motion.main
         id="live-arena"
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto w-full max-w-7xl flex-1 px-4 py-12 sm:px-6 lg:px-8"
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        className="mx-auto w-full max-w-7xl flex-1 px-4 py-14 md:py-20 sm:px-6 lg:px-8"
       >
         <div className="flex flex-col gap-6">
-          
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#111111] px-3 py-1 text-xs text-white mb-2">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Interactive Live Reservation Arena</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0a0a0a]">
-                Live Seat Matrix &amp; Concurrency Playground
-              </h2>
-            </div>
-            <p className="text-xs text-[#616160]">
-              Synchronized in real-time across all active browser tabs via Redis Lua gate.
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-[-0.03em] leading-[1.02] text-[#0a0a0a]">
+              Live seat matrix
+            </h2>
+            <p className="font-serif text-base text-[#0a0a0a] max-w-[40ch]">
+              Synchronized across every active tab via the Redis Lua reservation gate.
             </p>
           </div>
 
+          <div className="flex flex-col gap-6">
           {/* Top Widgets Bar */}
-          <section>
+          <div data-ui>
             <TopWidgetsBar
               events={events}
               activeEventId={activeEvent?.id || ""}
@@ -468,40 +466,44 @@ export default function Home() {
               onResetSeats={handleResetSeats}
               isResetting={isResetting}
             />
-          </section>
+          </div>
 
           {/* Arena Display: Duel vs Standard */}
           {isDuelMode ? (
-            <section className="flex flex-col gap-6">
-              <DuelConsole
-                selectedSeat={selectedSeat}
-                onSelectSeat={setSelectedSeat}
-                bookedSeats={bookedSeats}
-                contestedSeat={contestedSeat}
-                onBookSeat={handleBookSeat}
-                onSimulateCollision={handleSimulateCollision}
-                isBooking={isBooking}
-                isSimulating={isSimulating}
-                lastDuelResult={lastDuelResult}
-              />
+            <div className="flex flex-col gap-6">
+              <div data-ui>
+                <DuelConsole
+                  selectedSeat={selectedSeat}
+                  onSelectSeat={setSelectedSeat}
+                  bookedSeats={bookedSeats}
+                  contestedSeat={contestedSeat}
+                  onBookSeat={handleBookSeat}
+                  onSimulateCollision={handleSimulateCollision}
+                  isBooking={isBooking}
+                  isSimulating={isSimulating}
+                  lastDuelResult={lastDuelResult}
+                />
+              </div>
 
-              <SeatMatrix
-                eventId={activeEvent?.id || ""}
-                eventName={activeEvent?.name || "Cinema Showcase"}
-                bookedSeats={bookedSeats}
-                contestedSeat={contestedSeat}
-                activeDevice={activeDevice}
-                selectedSeat={selectedSeat}
-                onSelectSeat={setSelectedSeat}
-                onBookSeat={handleBookSeat}
-                onSimulateCollision={handleSimulateCollision}
-                isBooking={isBooking}
-                isSimulating={isSimulating}
-              />
-            </section>
+              <div data-ui>
+                <SeatMatrix
+                  eventId={activeEvent?.id || ""}
+                  eventName={activeEvent?.name || "Cinema Showcase"}
+                  bookedSeats={bookedSeats}
+                  contestedSeat={contestedSeat}
+                  activeDevice={activeDevice}
+                  selectedSeat={selectedSeat}
+                  onSelectSeat={setSelectedSeat}
+                  onBookSeat={handleBookSeat}
+                  onSimulateCollision={handleSimulateCollision}
+                  isBooking={isBooking}
+                  isSimulating={isSimulating}
+                />
+              </div>
+            </div>
           ) : (
-            <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-              <div className="xl:col-span-7 flex flex-col">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+              <div data-ui className="xl:col-span-7 flex flex-col">
                 <SeatMatrix
                   eventId={activeEvent?.id || ""}
                   eventName={activeEvent?.name || "Cinema Presentation"}
@@ -518,21 +520,26 @@ export default function Home() {
               </div>
 
               <div className="xl:col-span-5 flex flex-col gap-6">
-                <ChaosControls
-                  injectLatency={injectLatency}
-                  onToggleLatency={setInjectLatency}
-                  onSimulateCrash={handleSimulateCrash}
-                  isCrashing={isCrashing}
-                  lastCrashReport={lastCrashReport}
-                />
+                <div data-ui>
+                  <ChaosControls
+                    injectLatency={injectLatency}
+                    onToggleLatency={setInjectLatency}
+                    onSimulateCrash={handleSimulateCrash}
+                    isCrashing={isCrashing}
+                    lastCrashReport={lastCrashReport}
+                  />
+                </div>
 
-                <ActivityStream
-                  items={activityItems}
-                  onClear={() => setActivityItems([])}
-                />
+                <div data-ui>
+                  <ActivityStream
+                    items={activityItems}
+                    onClear={() => setActivityItems([])}
+                  />
+                </div>
               </div>
-            </section>
+            </div>
           )}
+          </div>
         </div>
       </motion.main>
 
@@ -547,6 +554,9 @@ export default function Home() {
         lastResult={lastCheckoutResult}
         health={health}
       />
+
+      {/* Designed Block-Wordmark Footer */}
+      <Footer onLaunchArena={scrollToArena} onLaunchDuel={scrollToDuel} />
 
       {/* Ticket Pass Modal */}
       <TicketPassModal

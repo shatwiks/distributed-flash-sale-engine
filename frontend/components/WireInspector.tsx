@@ -46,9 +46,11 @@ export function WireInspector({ lastResult, health }: WireInspectorProps) {
 
   return (
     <aside
+      data-ui
       aria-label="Inspect the Wire Micro-Telemetry Drawer"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-[#111111]"
+      className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 mt-4 mb-8"
     >
+      <div className="rounded-2xl bg-[#111111] overflow-hidden">
       {/* Drawer Toggle Header Bar with active press */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
@@ -56,16 +58,16 @@ export function WireInspector({ lastResult, health }: WireInspectorProps) {
         aria-controls="wire-drawer-content"
         whileHover={{ backgroundColor: "#171717" }}
         whileTap={{ scale: 0.99 }}
-        className="flex w-full items-center justify-between px-4 sm:px-8 py-2.5 bg-[#111111] text-xs text-white transition-colors cursor-pointer"
+        className="flex w-full items-center justify-between px-6 py-4 bg-[#111111] text-[13px] text-white transition-colors cursor-pointer"
       >
-        <div className="flex items-center gap-3">
-          <span className="h-2 w-2 rounded-full bg-white" />
-          <span className="font-bold text-white text-xs">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-[#10b981]" />
+          <span className="font-bold text-white text-[13px] shrink-0">
             Inspect the wire
           </span>
           <span className="hidden sm:inline text-[#616160]">•</span>
-          <code className="hidden sm:inline text-xs text-[#a1a1a1] font-mono truncate max-w-sm">
-            {rawCommand.slice(0, 55)}...
+          <code className="hidden sm:inline text-[13px] text-[#a1a1a1] font-mono truncate max-w-md">
+            {rawCommand.slice(0, 60)}...
           </code>
         </div>
 
@@ -227,6 +229,7 @@ export function WireInspector({ lastResult, health }: WireInspectorProps) {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </aside>
   );
 }

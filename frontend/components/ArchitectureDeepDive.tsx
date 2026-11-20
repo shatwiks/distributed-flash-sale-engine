@@ -2,304 +2,263 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import {
-  Cpu,
-  ShieldCheck,
-  Server,
-  ChevronDown,
-  ArrowRight,
-  Code,
-  Flame,
-  Zap,
-  CheckCircle2,
-} from "lucide-react";
-import { Card3D } from "./Card3D";
 
-interface ArchCard {
+interface LifecycleStage {
   id: string;
-  tag: string;
-  title: string;
-  summary: string;
-  badge: string;
-  icon: React.ElementType;
-  accent: string;
-  deepDive: {
-    problem: string;
-    solution: string;
-    codeSnippet?: string;
-    bullets: string[];
-  };
+  clause: string;
+  bg: string;
+  text: string;
+  muted: string;
+  cardBg: string;
+  cardText: string;
+  cardMuted: string;
+  statusLabel: string;
+  statusTone: string;
+  latency: string;
+  seatState: string;
+  command: string;
+  problem: string;
+  solution: string;
+  codeSnippet: string;
 }
 
-const ARCH_CARDS: ArchCard[] = [
+const STAGES: LifecycleStage[] = [
   {
-    id: "concurrency",
-    tag: "Concurrency control",
-    title: "The Concurrency Bottleneck (Little's Law)",
-    summary:
-      "Why traditional relational SELECT ... FOR UPDATE cascades into pool starvation, p99 spikes to 1,240ms, and 15% HTTP 500 error rates under 10,000 RPS burst traffic.",
-    badge: "Little's Law: L = λW",
-    icon: Flame,
-    accent: "text-[#0a0a0a] bg-[#f5f4f2] border border-[#e5e3df]",
-    deepDive: {
-      problem:
-        "At arrival rate λ = 10,000 req/s, if DB transactions hold locks for W = 25ms, required concurrent connection capacity is L = 250 active connections. Standard DB pools provision only 20-50 connections, queuing queries until connectionTimeoutMillis fires.",
-      solution:
-        "Offload the hot inventory decrement from the disk/WAL serialization queue to an in-memory gate that executes in sub-millisecond single-threaded time.",
-      bullets: [
-        "Eliminates disk WAL lock serialization on high-demand event rows",
-        "Prevents Node.js event loop queuing and connection timeout errors",
-        "Protects PostgreSQL connection pools from thread exhaustion",
-      ],
-      codeSnippet: `-- Traditional Bottleneck (Banned):
+    id: "arrival",
+    clause: "First, it lands at the gate.",
+    bg: "bg-[#ffffff]",
+    text: "text-[#0a0a0a]",
+    muted: "text-[#616160]",
+    cardBg: "bg-[#f5f4f2]",
+    cardText: "text-[#0a0a0a]",
+    cardMuted: "text-[#616160]",
+    statusLabel: "Incoming checkout",
+    statusTone: "bg-[#0a0a0a] text-white",
+    latency: "0.0 ms",
+    seatState: "Seat D5 · Requested",
+    command: "POST /events/:id/checkout",
+    problem:
+      "At 10,000 requests per second, holding relational row locks for 25ms requires 250 concurrent PostgreSQL connections (Little's Law: L = λW). Standard pools hold 20 to 50 connections, cascading into HTTP 500 timeouts.",
+    solution:
+      "Every checkout arrives with a unique idempotency key and never touches PostgreSQL until the in-memory gate clears it. Duplicate retries short-circuit before stock is evaluated.",
+    codeSnippet: `-- Traditional Relational Bottleneck (Avoided):
 BEGIN;
-SELECT available_tickets FROM events WHERE id = $1 FOR UPDATE; -- Blocks whole row
+SELECT available_tickets FROM events WHERE id = $1 FOR UPDATE;
 UPDATE events SET available_tickets = available_tickets - 1 WHERE id = $1;
 COMMIT;`,
-    },
   },
   {
-    id: "redis-lua",
-    tag: "Atomic gatekeeping",
-    title: "O(1) Redis Lua Atomic Gatekeeping",
-    summary:
-      "Atomic script execution runs inside single-threaded Redis, enforcing strict linearizability, zero TOCTOU race conditions, and sub-2ms response latency.",
-    badge: "Sub-2ms Isolation",
-    icon: Zap,
-    accent: "text-[#0a0a0a] bg-[#f5f4f2] border border-[#e5e3df]",
-    deepDive: {
-      problem:
-        "Distributed multi-step checks (check stock -> deduct stock) create a Time-of-Check to Time-of-Use window where thousands of concurrent requests read stale stock.",
-      solution:
-        "Single-threaded Redis Lua scripts execute atomically without interleaving. If available stock >= requested, it decrements immediately and marks the seat reserved in a single atomic tick.",
-      bullets: [
-        "Zero TOCTOU vulnerability guaranteed by Redis single-threaded runtime",
-        "Redlock distributed locking prevents duplicate multi-instance lease conflicts",
-        "Deterministic return codes: 1 = Reserved, 0 = Sold Out, -1 = Already Booked",
-      ],
-      codeSnippet: `-- Atomic Redis Lua Gate Script:
-local booked = redis.call('SISMEMBER', KEYS[1], ARGV[1])
-if booked == 1 then return -1 end -- Already claimed
-
-local stock = tonumber(redis.call('GET', KEYS[2]) or '0')
-if stock < tonumber(ARGV[2]) then return 0 end -- Sold out
-
-redis.call('DECRBY', KEYS[2], ARGV[2])
+    id: "redis-gate",
+    clause: "Then Redis claims the seat.",
+    bg: "bg-[#edebe7]",
+    text: "text-[#0a0a0a]",
+    muted: "text-[#616160]",
+    cardBg: "bg-[#ffffff]",
+    cardText: "text-[#0a0a0a]",
+    cardMuted: "text-[#616160]",
+    statusLabel: "Lua gate locked",
+    statusTone: "bg-[#0a0a0a] text-white",
+    latency: "1.2 ms",
+    seatState: "Seat D5 · Reserved in RAM",
+    command: "EVALSHA reserve_seat.lua",
+    problem:
+      "Separate read-then-write checks create a Time-of-Check to Time-of-Use window where hundreds of concurrent workers read identical stock counts and oversell the auditorium.",
+    solution:
+      "Single-threaded Redis Lua evaluates membership and decrements inventory in one atomic tick. Sold-out or contested requests return HTTP 409 in under two milliseconds with zero database calls.",
+    codeSnippet: `-- Atomic Redis Lua Gate (src/services/inventoryService.js):
+if redis.call('SISMEMBER', KEYS[1], ARGV[1]) == 1 then return -2 end
+local stock = tonumber(redis.call('GET', KEYS[2]))
+if stock < tonumber(ARGV[2]) then return 0 end
 redis.call('SADD', KEYS[1], ARGV[1])
-return 1 -- Success (Acquired)`,
-    },
+redis.call('DECRBY', KEYS[2], ARGV[2])
+return 1`,
   },
   {
-    id: "saga",
-    tag: "Eventual consistency",
-    title: "Two-Phase Sagas & Compensating Rollbacks",
-    summary:
-      "When the relational database write encounters an unexpected network partition or crash, an automated compensating INCRBY restores Redis inventory with zero leakage.",
-    badge: "Zero Stock Leakage",
-    icon: ShieldCheck,
-    accent: "text-[#0a0a0a] bg-[#f5f4f2] border border-[#e5e3df]",
-    deepDive: {
-      problem:
-        "If Redis decrements stock but PostgreSQL fails to insert the order record due to a crash, inventory disappears into the void (phantom stock leakage).",
-      solution:
-        "Distributed saga with compensating transaction: upon PostgreSQL catch-block, the worker triggers an immediate Redis compensating rollback: INCRBY (+1) and SREM seat.",
-      bullets: [
-        "Guaranteed eventual consistency between Redis cache and PostgreSQL disk",
-        "Two-tier idempotency keys ensure at-most-once order execution",
-        "Reconciliation cron job detects and resolves any transient orphaned locks",
-      ],
-      codeSnippet: `// Two-Phase Compensating Saga Execution:
+    id: "postgres-commit",
+    clause: "Next, Postgres writes disk.",
+    bg: "bg-[#e2dfd9]",
+    text: "text-[#0a0a0a]",
+    muted: "text-[#616160]",
+    cardBg: "bg-[#ffffff]",
+    cardText: "text-[#0a0a0a]",
+    cardMuted: "text-[#616160]",
+    statusLabel: "201 Confirmed",
+    statusTone: "bg-[#047857] text-white",
+    latency: "14.8 ms",
+    seatState: "Seat D5 · Ticket Issued",
+    command: "INSERT INTO orders ... COMMIT",
+    problem:
+      "In-memory caches are fast but volatile. Financial audit trails, admission passes, and idempotency guarantees must survive container restarts on durable ACID storage.",
+    solution:
+      "Only winning reservations acquire a scoped PostgreSQL pool client to persist the confirmed order and sync durable stock. Pool utilization stays below 10% even under 10k RPS bursts.",
+    codeSnippet: `-- Scoped Durable Order Commit (src/services/ticketService.js):
+BEGIN;
+INSERT INTO orders (event_id, user_id, quantity, status, seat_number, idempotency_key)
+VALUES ($1, $2, $3, 'confirmed', $4, $5)
+RETURNING id, seat_number, created_at;
+UPDATE events SET available_tickets = available_tickets - $3 WHERE id = $1;
+COMMIT;`,
+  },
+  {
+    id: "saga-rollback",
+    clause: "Or the saga rolls back.",
+    bg: "bg-[#111111]",
+    text: "text-white",
+    muted: "text-[#a1a1a1]",
+    cardBg: "bg-[#1c1c1c]",
+    cardText: "text-white",
+    cardMuted: "text-[#a1a1a1]",
+    statusLabel: "INCRBY (+1) Restored",
+    statusTone: "bg-[#be123c] text-white",
+    latency: "1.6 ms",
+    seatState: "Seat D5 · Returned to Pool",
+    command: "SREM + INCRBY event:stock 1",
+    problem:
+      "If Redis decrements a seat but PostgreSQL crashes or times out before committing, that seat vanishes into phantom inventory leakage.",
+    solution:
+      "A two-phase compensating transaction catches any database failure and immediately executes RELEASE_SEAT_LUA to remove the seat lock and restore stock in Redis.",
+    codeSnippet: `// Compensating Saga Rollback (src/services/ticketService.js):
 try {
-  await db.query('INSERT INTO orders (...) VALUES (...)');
-} catch (dbError) {
-  // Database crashed! Execute compensating rollback:
-  await redis.incrby(\`event:\${eventId}:stock\`, quantity);
-  await redis.srem(\`event:\${eventId}:booked_seats\`, seatNumber);
-  throw new SagaRollbackException('Compensating rollback restored stock');
+  await client.query('COMMIT');
+} catch (dbErr) {
+  await client.query('ROLLBACK');
+  await inventoryService.releaseSeat(eventId, seatNumber, quantity);
+  throw dbErr;
 }`,
-    },
-  },
-  {
-    id: "infrastructure",
-    tag: "Production IaC",
-    title: "AWS ECS Fargate & ALB Parity",
-    summary:
-      "Production Docker containerization (< 50MB multi-stage builds) with Terraform IaC, auto-scaling Fargate tasks, RDS Aurora, and ElastiCache Redis.",
-    badge: "Production Parity",
-    icon: Server,
-    accent: "text-[#0a0a0a] bg-[#f5f4f2] border border-[#e5e3df]",
-    deepDive: {
-      problem:
-        "High-concurrency systems fail in production when local development Docker environments deviate from cloud container orchestration semantics.",
-      solution:
-        "Strict parity between local Docker Compose architecture and AWS ECS Fargate Terraform declarations, including non-root node users and sub-second health checks.",
-      bullets: [
-        "Multi-stage Docker build producing hardened < 50MB runtime containers",
-        "ALB least-outstanding-requests routing to prevent hot worker saturation",
-        "Terraform modular configuration covering ECS, VPC, RDS, and ElastiCache",
-      ],
-      codeSnippet: `# AWS ECS Fargate Terraform Task Definition:
-resource "aws_ecs_task_definition" "api" {
-  family                   = "ticket-booking-api"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = 1024
-  memory                   = 2048
-  container_definitions    = jsonencode([...])
-}`,
-    },
   },
 ];
 
 export function ArchitectureDeepDive() {
-  const [expandedId, setExpandedId] = useState<string | null>("redis-lua");
-
-  const toggleCard = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
-  };
+  const [selectedId, setSelectedId] = useState<string>("redis-gate");
+  const activeStage = STAGES.find((s) => s.id === selectedId) || STAGES[1];
 
   return (
-    <section id="architecture" className="py-16 md:py-24 relative">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
-      >
-        
-        {/* Section Header */}
-        <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#111111] px-3 py-1 text-xs text-white mb-3">
-            <Cpu className="h-3.5 w-3.5" />
-            <span>Engineering trade-offs &amp; deep dives</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0a0a0a]">
-            Architecture Blueprint &amp; Concurrency Guarantees
+    <section id="architecture" className="py-20 md:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Section Heading — No eyebrow pill, <= 2 lines at every viewport */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-[-0.03em] leading-[1.02] text-[#0a0a0a]">
+            From click to ticket.
           </h2>
-          <p className="mt-3 text-[#616160] text-sm sm:text-base leading-relaxed">
-            Expand any card to inspect the underlying mechanical trade-offs, code implementations, and failure mode mitigations.
+          <p className="font-serif text-base sm:text-lg text-[#0a0a0a] max-w-[40ch] leading-relaxed">
+            Follow a single reservation for Seat D5 across four stages. Click any
+            field below to inspect its exact production code.
           </p>
         </div>
+      </div>
 
-        {/* Expanding Cards Grid */}
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          {ARCH_CARDS.map((card) => {
-            const isExpanded = expandedId === card.id;
-            const Icon = card.icon;
-
+      {/* Full-Width Four-Field Strip (Zero Gaps, Tonal Step Separation) */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 rounded-2xl overflow-hidden">
+          {STAGES.map((stage) => {
+            const isSelected = stage.id === selectedId;
             return (
-              <motion.div
-                key={card.id}
-                layout
-                transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                className="card-light p-6 cursor-pointer relative"
-                onClick={() => toggleCard(card.id)}
+              <button
+                key={stage.id}
+                type="button"
+                onClick={() => setSelectedId(stage.id)}
+                aria-pressed={isSelected}
+                className={`${stage.bg} ${stage.text} group relative flex min-h-[340px] lg:min-h-[400px] flex-col justify-between p-7 text-left transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-3px]`}
               >
-                {/* Header */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.accent}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs text-[#616160] block font-medium">
-                        {card.tag}
-                      </span>
-                      <h3 className="text-base sm:text-lg font-bold text-[#0a0a0a] tracking-tight">
-                        {card.title}
-                      </h3>
-                    </div>
+                {/* Top indicator */}
+                <div className="flex items-center justify-between text-[13px] font-semibold">
+                  <span className={stage.muted}>{stage.latency}</span>
+                  {isSelected && (
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        stage.id === "saga-rollback" ? "bg-white" : "bg-[#0a0a0a]"
+                      }`}
+                    />
+                  )}
+                </div>
+
+                {/* Same Ticket Card Advancing Through Lifecycle (data-ui) */}
+                <div
+                  data-ui
+                  className={`${stage.cardBg} ${stage.cardText} relative my-6 rounded-xl p-4 transition-transform duration-150 group-hover:-translate-y-1.5`}
+                >
+                  {/* Mini ticket notches */}
+                  <span
+                    aria-hidden="true"
+                    className={`absolute -left-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full ${stage.bg}`}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className={`absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full ${stage.bg}`}
+                  />
+
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-display text-sm font-bold">
+                      Seat D5
+                    </span>
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-[13px] font-semibold ${stage.statusTone}`}
+                    >
+                      {stage.statusLabel}
+                    </span>
                   </div>
 
-                  <motion.div
-                    animate={{ rotate: isExpanded ? 180 : 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className="p-1 rounded-lg text-[#616160]"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </motion.div>
+                  <p className={`mt-2 text-[13px] ${stage.cardMuted}`}>
+                    {stage.seatState}
+                  </p>
+
+                  <div className="mt-3 pt-2.5 text-[13px]">
+                    <code className="font-mono block truncate">{stage.command}</code>
+                  </div>
                 </div>
 
-                {/* Summary */}
-                <p className="mt-4 text-xs sm:text-sm text-[#616160] leading-relaxed">
-                  {card.summary}
+                {/* Bottom Order Clause */}
+                <p className="font-display text-xl sm:text-2xl font-bold tracking-[-0.02em] leading-[1.12]">
+                  {stage.clause}
                 </p>
-
-                {/* Badge Tag */}
-                <div className="mt-4 flex items-center justify-between text-xs">
-                  <span className="rounded-full bg-[#f5f4f2] border border-[#e5e3df] px-3 py-1 text-[#0a0a0a] font-medium">
-                    {card.badge}
-                  </span>
-                  <span className="text-[#0a0a0a] text-xs font-semibold flex items-center gap-1">
-                    {isExpanded ? "Collapse details" : "Expand deep-dive"}
-                    <ArrowRight className="h-3 w-3" />
-                  </span>
-                </div>
-
-                {/* Expanded Detailed Layout */}
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                      className="mt-6 pt-5 flex flex-col gap-4 text-xs"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Problem vs Solution Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="bg-[#fff1f2] border border-[#fecdd3] rounded-xl p-3 text-[#9f1239]">
-                          <span className="font-bold text-[#9f1239] text-xs block mb-1">
-                            Bottleneck Risk
-                          </span>
-                          <p className="text-[#be123c] text-xs leading-relaxed">
-                            {card.deepDive.problem}
-                          </p>
-                        </div>
-
-                        <div className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl p-3 text-[#065f46]">
-                          <span className="font-bold text-[#065f46] text-xs block mb-1">
-                            Engine Solution
-                          </span>
-                          <p className="text-[#047857] text-xs leading-relaxed">
-                            {card.deepDive.solution}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Architecture Bullets */}
-                      <div className="space-y-1.5 pt-1">
-                        {card.deepDive.bullets.map((bullet, idx) => (
-                          <div key={idx} className="flex items-start gap-2 text-[#444444] text-xs">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-[#0a0a0a] shrink-0 mt-0.5" />
-                            <span>{bullet}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Literal Code Box */}
-                      {card.deepDive.codeSnippet && (
-                        <div className="bg-[#111111] border border-[#222222] rounded-xl p-3 text-[11px] overflow-x-auto text-[#f5f4f2]">
-                          <div className="flex items-center justify-between p-2 mb-2 bg-[#1c1c1c] rounded-lg text-[#a1a1a1]">
-                            <span className="flex items-center gap-1.5 text-xs text-white">
-                              <Code className="h-3 w-3 text-white" />
-                              Executable Mechanism
-                            </span>
-                            <span className="text-xs text-[#a1a1a1]">Production Tested</span>
-                          </div>
-                          <pre className="leading-snug font-mono text-[#f5f4f2]"><code>{card.deepDive.codeSnippet}</code></pre>
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+              </button>
             );
           })}
         </div>
 
-      </motion.div>
+        {/* Active Stage Deep-Dive & Code Panel (Borderless Tonal Surface) */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeStage.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4"
+          >
+            <div className="lg:col-span-6 rounded-2xl bg-[#ffffff] p-7 sm:p-9 flex flex-col justify-between gap-6">
+              <div>
+                <h3 className="font-display text-xl sm:text-2xl font-bold text-[#0a0a0a]">
+                  {activeStage.clause}
+                </h3>
+                <p className="mt-4 font-serif text-base text-[#0a0a0a] leading-relaxed">
+                  {activeStage.solution}
+                </p>
+              </div>
+              <div className="rounded-xl bg-[#f5f4f2] p-4">
+                <p className="text-[13px] font-bold text-[#0a0a0a]">
+                  Why naive architectures break here
+                </p>
+                <p className="mt-1.5 font-serif text-sm text-[#0a0a0a] leading-relaxed">
+                  {activeStage.problem}
+                </p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-6 rounded-2xl bg-[#111111] p-7 sm:p-9 text-white flex flex-col justify-between">
+              <div className="flex items-center justify-between text-[13px] text-[#a1a1a1] mb-4">
+                <span className="font-semibold text-white">
+                  Production Implementation
+                </span>
+                <code className="font-mono">{activeStage.command}</code>
+              </div>
+              <pre className="overflow-x-auto font-mono text-[13px] leading-relaxed text-[#e5e3df]">
+                <code>{activeStage.codeSnippet}</code>
+              </pre>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </section>
   );
 }

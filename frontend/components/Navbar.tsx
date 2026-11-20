@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Ticket, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { HealthData } from "@/lib/api";
 import { motion } from "motion/react";
 
@@ -12,36 +12,40 @@ interface NavbarProps {
   onNavigateToDuel?: () => void;
 }
 
-export function Navbar({ health, onOpenCreateModal, onNavigateToArena, onNavigateToDuel }: NavbarProps) {
+export function Navbar({
+  health,
+  onOpenCreateModal,
+  onNavigateToDuel,
+}: NavbarProps) {
   const isHealthy = health.status === "ok";
   const gateLatency = health.redisLatencyMs || 1.2;
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#f5f4f2]/90 backdrop-blur-md">
+    <header className="relative z-40 w-full bg-[#f5f4f2]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        
-        {/* Brand */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="flex items-center gap-3 cursor-pointer"
+        {/* Brand Wordmark with Notched Ticket Mark */}
+        <a
+          href="#"
+          className="flex items-center gap-3 text-[#0a0a0a] focus-visible:outline-2 focus-visible:outline-offset-4"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0a0a0a] text-white">
-            <Ticket className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-base font-bold tracking-tight text-[#0a0a0a]">
-                Flash-Sale Engine
-              </span>
-              <span className="hidden sm:inline-block rounded-full bg-[#e5e3df] px-2.5 py-0.5 text-xs font-semibold text-[#0a0a0a]">
-                10k RPS
-              </span>
-            </div>
-          </div>
-        </motion.div>
+          <span
+            aria-hidden="true"
+            className="relative flex h-8 w-10 items-center justify-center rounded-md bg-[#0a0a0a] text-white"
+          >
+            <span className="absolute -left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#f5f4f2]" />
+            <span className="absolute -right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#f5f4f2]" />
+            <span className="text-[11px] font-extrabold tracking-tighter">FS</span>
+          </span>
+          <span className="text-base font-bold tracking-tight text-[#0a0a0a]">
+            Flash-Sale Engine
+          </span>
+        </a>
 
-        {/* Center Nav Links */}
-        <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-[#555555]">
+        {/* Center Plain Navigation Links */}
+        <nav
+          aria-label="Primary navigation"
+          className="hidden lg:flex items-center gap-8 text-sm font-medium text-[#616160]"
+        >
           <a
             href="#live-arena"
             className="hover:text-[#0a0a0a] transition-colors"
@@ -49,6 +53,7 @@ export function Navbar({ health, onOpenCreateModal, onNavigateToArena, onNavigat
             Live Arena
           </a>
           <button
+            type="button"
             onClick={onNavigateToDuel}
             className="hover:text-[#0a0a0a] transition-colors cursor-pointer"
           >
@@ -58,7 +63,7 @@ export function Navbar({ health, onOpenCreateModal, onNavigateToArena, onNavigat
             href="#architecture"
             className="hover:text-[#0a0a0a] transition-colors"
           >
-            Architecture
+            How It Works
           </a>
           <a
             href="#benchmarks"
@@ -68,35 +73,37 @@ export function Navbar({ health, onOpenCreateModal, onNavigateToArena, onNavigat
           </a>
         </nav>
 
-        {/* Health & Action */}
+        {/* Live Gate Telemetry + Primary Action */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs">
-            <motion.span
-              animate={isHealthy ? { scale: [1, 1.25, 1] } : {}}
-              transition={{ repeat: Infinity, duration: 2.5 }}
+          <div
+            data-ui
+            className="flex items-center gap-2 rounded-lg bg-[#ffffff] px-3.5 py-2 text-[13px]"
+            aria-label={`Redis gate status: ${isHealthy ? "active" : "degraded"}, ${gateLatency} milliseconds`}
+          >
+            <span
               className={`h-2 w-2 rounded-full ${
-                isHealthy ? "bg-emerald-500" : "bg-rose-500"
+                isHealthy ? "bg-[#10b981]" : "bg-[#e11d48]"
               }`}
             />
-            <span className="text-[#333333] font-medium hidden sm:inline">
-              {isHealthy ? "Gate active" : "Degraded"}
+            <span className="text-[#616160] font-medium hidden sm:inline">
+              {isHealthy ? "Redis gate" : "Degraded"}
             </span>
-            <span className="text-[#0a0a0a] font-bold">
+            <span className="text-[#0a0a0a] font-bold tabular-nums">
               {gateLatency}ms
             </span>
           </div>
 
           <motion.button
+            type="button"
             onClick={onOpenCreateModal}
-            whileHover={{ scale: 1.04, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn-black flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer"
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.96 }}
+            className="ticket-btn flex items-center gap-1.5 px-4 py-2 text-[13px] cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
             <span>New Event</span>
           </motion.button>
         </div>
-
       </div>
     </header>
   );

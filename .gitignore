@@ -37,6 +37,7 @@ scratch/
 tmp/
 temp/
 *.tmp
+.taste-skill/inspect/
 
 # Terraform Local State & Caches
 terraform/.terraform/
