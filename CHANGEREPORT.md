@@ -1,5 +1,23 @@
 # Change Report
 
+## 2026-11-21 03:11 IST — Visual & Animated Recruiter-Friendly README
+
+### Objective
+Rewrite `README.md` with custom animated SVG visuals, live redesigned UI preview imagery, plain-English storytelling for recruiters and non-technical readers, and collapsible technical deep dives for senior engineering reviewers.
+
+### Files Created & Modified
+- **Created [`docs/assets/hero-banner.svg`](docs/assets/hero-banner.svg):** Custom animated notched-ticket hero banner with pulsing live gate indicator, flowing Lua packet animation, and empirical k6 telemetry callout.
+- **Created [`docs/assets/concurrency-flow.svg`](docs/assets/concurrency-flow.svg):** Plain-English animated flow visual ("The Bouncer vs. The Accountant") showing 10,000 fans → Redis Lua Gate → PostgreSQL Ledger → Ticket Issued + Saga Rollback safety net.
+- **Created [`docs/assets/benchmarks-chart.svg`](docs/assets/benchmarks-chart.svg):** Animated horizontal bar comparison of Naive PostgreSQL locks vs. Redis Lua Engine across throughput, p95 latency, and overbooking/HTTP 500 rates.
+- **Created [`docs/assets/landing-preview.jpg`](docs/assets/landing-preview.jpg) & [`docs/assets/arena-preview.jpg`](docs/assets/arena-preview.jpg):** Real production-build screenshots of the redesigned landing page and interactive auditorium arena.
+- **Modified [`README.md`](README.md):** Restructured with animated hero banner, 15-second plain-English explainer, recruiter impact snapshot, live UI showcase, animated benchmarks, 60-second quickstart, 1-click cloud deploy table, and collapsible `<details>` technical deep dives.
+
+### Verification Results
+- Verified all 5 image/SVG asset paths exist under `docs/assets/` and match `README.md` references.
+- Committed and pushed cleanly to `origin/main`.
+
+---
+
 ## 2026-11-21 03:05 IST — Full Landing Page Redesign (`/design-taste-frontend` + `/impeccable`)
 
 ### Objective
