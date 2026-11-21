@@ -65,7 +65,7 @@ export function TopWidgetsBar({
                   whileTap={{ scale: 0.96 }}
                   className={`relative flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs transition-colors cursor-pointer ${
                     isActive
-                      ? "text-white font-semibold"
+                      ? "bg-[#0a0a0a] text-white font-semibold"
                       : "bg-[#f5f4f2] text-[#444444] hover:text-[#0a0a0a] hover:bg-[#edebe7] border border-[#e5e3df] font-medium"
                   }`}
                 >
@@ -141,7 +141,7 @@ export function TopWidgetsBar({
                 onClick={() => onToggleDevice("device_a")}
                 className={`relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
                   activeDevice === "device_a"
-                    ? "text-white font-semibold"
+                    ? "bg-[#0a0a0a] text-white font-semibold"
                     : "text-[#616160] hover:text-[#0a0a0a]"
                 }`}
               >
@@ -162,7 +162,7 @@ export function TopWidgetsBar({
                 onClick={() => onToggleDevice("device_b")}
                 className={`relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
                   activeDevice === "device_b"
-                    ? "text-white font-semibold"
+                    ? "bg-[#0a0a0a] text-white font-semibold"
                     : "text-[#616160] hover:text-[#0a0a0a]"
                 }`}
               >

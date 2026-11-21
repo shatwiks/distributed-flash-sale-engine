@@ -1,9 +1,17 @@
 @import "tailwindcss";
 
+@theme inline {
+  --font-sans: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif), Georgia, serif;
+}
+
 @layer base {
   :root {
     --bg-base: #f5f4f2;
     --bg-card: #ffffff;
+    --bg-stone: #edebe7;
+    --bg-stone-deep: #e2dfd9;
     --bg-dark: #111111;
     --text-primary: #0a0a0a;
     --text-muted: #616160;
@@ -14,18 +22,24 @@
   }
 
   body {
-    background-color: #f5f4f2;
-    color: #0a0a0a;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
     min-height: 100dvh;
   }
 
   h1, h2, h3, h4 {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
     text-wrap: balance;
   }
 
   p {
     text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid #0a0a0a;
+    outline-offset: 3px;
   }
 }
 
@@ -38,41 +52,62 @@
   }
 }
 
-/* Taste Skill exact card and surface classes */
+/* Tonal surfaces — separated by value steps, not thin rules */
 .card-light {
   background-color: #ffffff;
-  border: 1px solid #e5e3df;
   border-radius: 1rem;
 }
 
 .card-dark {
   background-color: #111111;
   color: #ffffff;
-  border: 1px solid #222222;
   border-radius: 1.25rem;
 }
 
 .surface-inset {
   background-color: #f5f4f2;
-  border: 1px solid #e5e3df;
   border-radius: 0.75rem;
 }
 
 .surface-inset-dark {
   background-color: #1c1c1c;
-  border: 1px solid #2e2e2e;
   border-radius: 0.75rem;
 }
 
-/* Primary Action Button: Solid Black Pill */
+/* Ticket-stub perforation stripe motif */
+.ticket-stripe {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Notched ticket button motif */
+.ticket-btn {
+  position: relative;
+  background-color: #0a0a0a;
+  color: #ffffff;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ticket-btn:hover:not(:disabled) {
+  background-color: #262626;
+  transform: translateY(-1px);
+}
+
+.ticket-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Primary Action Button: Solid Black */
 .btn-black {
   background-color: #0a0a0a;
   color: #ffffff;
   font-weight: 600;
   border-radius: 9999px;
-  transition-property: background-color, transform;
-  transition-duration: 0.15s;
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-black:hover:not(:disabled) {
@@ -84,16 +119,13 @@
   transform: translateY(1px);
 }
 
-/* Secondary Button: Clean White Pill */
+/* Secondary Button: Tonal Paper Pill */
 .btn-white {
   background-color: #ffffff;
   color: #0a0a0a;
   font-weight: 600;
-  border: 1px solid #e5e3df;
   border-radius: 9999px;
-  transition-property: background-color, transform;
-  transition-duration: 0.15s;
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-white:hover:not(:disabled) {
@@ -103,6 +135,40 @@
 
 .btn-white:active:not(:disabled) {
   transform: translateY(1px);
+}
+
+/* Custom range slider for Little's Law calculator */
+input[type="range"].engine-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: #d8d5ce;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+input[type="range"].engine-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #0a0a0a;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+input[type="range"].engine-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+input[type="range"].engine-slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: #0a0a0a;
+  cursor: pointer;
 }
 
 /* Custom Scrollbar */

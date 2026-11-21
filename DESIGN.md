@@ -15,35 +15,35 @@ colors:
   status-danger: "#e11d48"
 typography:
   display:
-    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-    fontSize: "clamp(2.5rem, 5vw, 3.75rem)"
+    fontFamily: '"Libre Franklin", ui-sans-serif, system-ui, sans-serif'
+    fontSize: "clamp(2.4rem, 4.4vw, 3.85rem)"
     fontWeight: 700
-    lineHeight: 1.08
-    letterSpacing: "-0.025em"
+    lineHeight: 0.94
+    letterSpacing: "-0.035em"
   headline:
-    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-    fontSize: "clamp(1.75rem, 3vw, 2.25rem)"
-    fontWeight: 800
-    lineHeight: 1.15
-    letterSpacing: "-0.02em"
-  title:
-    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-    fontSize: "1.125rem"
+    fontFamily: '"Libre Franklin", ui-sans-serif, system-ui, sans-serif'
+    fontSize: "clamp(1.875rem, 3.4vw, 3rem)"
     fontWeight: 700
-    lineHeight: 1.35
-    letterSpacing: "-0.01em"
+    lineHeight: 1.02
+    letterSpacing: "-0.03em"
+  title:
+    fontFamily: '"Libre Franklin", ui-sans-serif, system-ui, sans-serif'
+    fontSize: "1.25rem"
+    fontWeight: 700
+    lineHeight: 1.2
+    letterSpacing: "-0.02em"
   body:
-    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-    fontSize: "0.875rem"
+    fontFamily: '"Source Serif 4", Georgia, serif'
+    fontSize: "1.0625rem"
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.55
     letterSpacing: "normal"
   label:
-    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-    fontSize: "0.75rem"
+    fontFamily: '"Libre Franklin", ui-sans-serif, system-ui, sans-serif'
+    fontSize: "0.8125rem"
     fontWeight: 600
     lineHeight: 1.3
-    letterSpacing: "0.01em"
+    letterSpacing: "0em"
 rounded:
   sm: "8px"
   md: "12px"

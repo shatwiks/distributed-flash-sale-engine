@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 330" width="1200" height="330" role="img" aria-label="Empirical k6 Benchmarks: Naive PostgreSQL vs Hardened Redis Lua Engine">
+  <defs>
+    <style>
+      .h { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 800; fill: #0a0a0a; }
+      .lbl { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 700; font-size: 13px; fill: #0a0a0a; }
+      .sub { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 600; font-size: 12px; fill: #616160; }
+      .gain { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 800; font-size: 13px; fill: #047857; }
+      @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+      .bar { transform-box: fill-box; transform-origin: left center; animation: grow 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="330" rx="18" fill="#ffffff"/>
+  <text x="36" y="44" class="h" font-size="22">Measured k6 Stress Test Results (5,000 Virtual Users · 10k RPS Burst)</text>
+
+  <!-- Legend -->
+  <rect x="820" y="28" width="14" height="14" rx="3" fill="#d4d2ce"/>
+  <text x="842" y="40" class="sub">Naive PostgreSQL Locks</text>
+  <rect x="1010" y="28" width="14" height="14" rx="3" fill="#0a0a0a"/>
+  <text x="1032" y="40" class="lbl">Redis Lua Engine</text>
+
+  <!-- Row 1: Throughput -->
+  <g transform="translate(36, 76)">
+    <text x="0" y="16" class="lbl">Peak Throughput (Higher is Better)</text>
+    <text x="980" y="16" class="gain">9.3× FASTER (+835%)</text>
+
+    <rect x="0" y="26" width="840" height="18" rx="5" fill="#f5f4f2"/>
+    <rect x="0" y="26" width="90" height="18" rx="5" fill="#d4d2ce" class="bar"/>
+    <text x="102" y="40" class="sub">1,120 req/s (Pool saturated)</text>
+
+    <rect x="0" y="50" width="840" height="22" rx="5" fill="#f5f4f2"/>
+    <rect x="0" y="50" width="840" height="22" rx="5" fill="#0a0a0a" class="bar"/>
+    <text x="854" y="66" class="lbl">10,480 req/s</text>
+  </g>
+
+  <!-- Row 2: p95 Latency -->
+  <g transform="translate(36, 166)">
+    <text x="0" y="16" class="lbl">p95 Response Latency (Lower is Better)</text>
+    <text x="980" y="16" class="gain">93.2% LATENCY DROP</text>
+
+    <rect x="0" y="26" width="840" height="18" rx="5" fill="#f5f4f2"/>
+    <rect x="0" y="26" width="760" height="18" rx="5" fill="#be123c" class="bar"/>
+    <text x="772" y="40" class="sub">271.4 ms (Disk WAL queues)</text>
+
+    <rect x="0" y="50" width="840" height="22" rx="5" fill="#f5f4f2"/>
+    <rect x="0" y="50" width="52" height="22" rx="5" fill="#047857" class="bar"/>
+    <text x="64" y="66" class="lbl">18.5 ms (Sub-2ms Redis Lua gate)</text>
+  </g>
+
+  <!-- Row 3: Overbooking & Errors -->
+  <g transform="translate(36, 256)">
+    <text x="0" y="16" class="lbl">Overbooking &amp; HTTP 500 Crashes (Lower is Better)</text>
+    <text x="980" y="16" class="gain">100% INVARIANT SAFE</text>
+
+    <rect x="0" y="26" width="840" height="18" rx="5" fill="#f5f4f2"/>
+    <rect x="0" y="26" width="260" height="18" rx="5" fill="#be123c" class="bar"/>
+    <text x="272" y="40" class="sub">14.8% Oversold · 16.4% HTTP 500 Timeouts</text>
+
+    <rect x="0" y="50" width="840" height="22" rx="5" fill="#f5f4f2"/>
+    <rect x="0" y="50" width="8" height="22" rx="4" fill="#047857"/>
+    <text x="20" y="66" class="lbl">0.00% Overbooking · 0.00% HTTP 500 Errors</text>
+  </g>
+</svg>
