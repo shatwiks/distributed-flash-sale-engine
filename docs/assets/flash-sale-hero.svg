@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="100%" role="img" aria-label="Distributed Flash-Sale Engine: 10,000+ RPS Concurrency & Real-Time Inventory Control">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080A10" />
+      <stop offset="50%" stop-color="#0E131F" />
+      <stop offset="100%" stop-color="#091424" />
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#818CF8" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#DAFA9C" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#EF4444" />
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#1E293B" stroke-width="0.8" opacity="0.4" />
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="400" fill="url(#bgGrad)" />
+  <rect width="1200" height="400" fill="url(#grid)" />
+
+  <!-- Ambient Glow Effects -->
+  <circle cx="200" cy="80" r="180" fill="#38BDF8" opacity="0.08" filter="url(#glow)" />
+  <circle cx="1020" cy="320" r="220" fill="#DAFA9C" opacity="0.06" filter="url(#glow)" />
+  <circle cx="850" cy="100" r="160" fill="#818CF8" opacity="0.07" filter="url(#glow)" />
+
+  <!-- Top Decorative Bar & Pill -->
+  <g transform="translate(60, 42)">
+    <rect x="0" y="0" width="460" height="28" rx="14" fill="#0F172A" stroke="#334155" stroke-width="1" />
+    <circle cx="14" cy="14" r="5" fill="#DAFA9C" filter="url(#glow)" />
+    <text x="28" y="19" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="700" letter-spacing="1" fill="#94A3B8" text-transform="uppercase">
+      HIGH-CONCURRENCY DISTRIBUTED TICKETING • AWS ECS IAC
+    </text>
+  </g>
+
+  <!-- Main Headline Title -->
+  <g transform="translate(60, 114)">
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="38" font-weight="800" letter-spacing="-0.5" fill="#FFFFFF">
+      DISTRIBUTED FLASH-SALE ENGINE
+    </text>
+    <text x="0" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#94A3B8">
+      Atomic Inventory Reservation Gate <tspan fill="#38BDF8">|</tspan> Single-Threaded Redis Lua <tspan fill="#38BDF8">|</tspan> Redlock Distributed Consensus
+    </text>
+  </g>
+
+  <!-- Telemetry Metric Cards (Row of 4) -->
+  <g transform="translate(60, 180)">
+    <!-- Card 1: RPS -->
+    <g transform="translate(0, 0)">
+      <rect width="250" height="74" rx="10" fill="#0B132B" stroke="#1E293B" stroke-width="1.2" />
+      <text x="18" y="24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" fill="#64748B" letter-spacing="0.8">BURST THROUGHPUT</text>
+      <text x="18" y="54" font-family="ui-monospace, 'SF Mono', Consolas, monospace" font-size="24" font-weight="800" fill="#DAFA9C">10,000+ RPS</text>
+      <rect x="200" y="18" width="36" height="18" rx="4" fill="#14532D" />
+      <text x="218" y="31" font-family="sans-serif" font-size="10" font-weight="700" fill="#86EFAC" text-anchor="middle">k6</text>
+    </g>
+
+    <!-- Card 2: Overbooking -->
+    <g transform="translate(270, 0)">
+      <rect width="250" height="74" rx="10" fill="#0B132B" stroke="#1E293B" stroke-width="1.2" />
+      <text x="18" y="24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" fill="#64748B" letter-spacing="0.8">OVERBOOKING GUARANTEE</text>
+      <text x="18" y="54" font-family="ui-monospace, 'SF Mono', Consolas, monospace" font-size="24" font-weight="800" fill="#38BDF8">0.00%</text>
+      <rect x="185" y="18" width="52" height="18" rx="4" fill="#075985" />
+      <text x="211" y="31" font-family="sans-serif" font-size="10" font-weight="700" fill="#7DD3FC" text-anchor="middle">ATOMIC</text>
+    </g>
+
+    <!-- Card 3: p95 Tail Latency -->
+    <g transform="translate(540, 0)">
+      <rect width="250" height="74" rx="10" fill="#0B132B" stroke="#1E293B" stroke-width="1.2" />
+      <text x="18" y="24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" fill="#64748B" letter-spacing="0.8">P95 TAIL LATENCY</text>
+      <text x="18" y="54" font-family="ui-monospace, 'SF Mono', Consolas, monospace" font-size="24" font-weight="800" fill="#F8FAFC">18.5 ms</text>
+      <rect x="188" y="18" width="48" height="18" rx="4" fill="#1E293B" />
+      <text x="212" y="31" font-family="sans-serif" font-size="10" font-weight="700" fill="#A7F3D0" text-anchor="middle">-93.2%</text>
+    </g>
+
+    <!-- Card 4: HTTP 500s -->
+    <g transform="translate(810, 0)">
+      <rect width="270" height="74" rx="10" fill="#0B132B" stroke="#1E293B" stroke-width="1.2" />
+      <text x="18" y="24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" fill="#64748B" letter-spacing="0.8">ERROR RATE UNDER 5K VU</text>
+      <text x="18" y="54" font-family="ui-monospace, 'SF Mono', Consolas, monospace" font-size="24" font-weight="800" fill="#FBBF24">0.00% 500s</text>
+      <rect x="195" y="18" width="60" height="18" rx="4" fill="#3B1C0B" />
+      <text x="225" y="31" font-family="sans-serif" font-size="10" font-weight="700" fill="#FCD34D" text-anchor="middle">STABLE</text>
+    </g>
+  </g>
+
+  <!-- Interactive Architecture Flow Line -->
+  <g transform="translate(60, 280)">
+    <rect width="1080" height="88" rx="10" fill="#0B132B" stroke="#1E293B" stroke-width="1" />
+
+    <!-- Node 1: Inbound Burst -->
+    <g transform="translate(24, 20)">
+      <rect width="180" height="48" rx="6" fill="#131C31" stroke="#334155" stroke-width="1" />
+      <text x="90" y="22" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="700" fill="#E2E8F0" text-anchor="middle">5,000 Concurrent VUs</text>
+      <text x="90" y="38" font-family="ui-monospace, monospace" font-size="10" fill="#94A3B8" text-anchor="middle">10k+ RPS Inbound</text>
+    </g>
+
+    <!-- Arrow 1 -->
+    <path d="M 210 44 L 244 44" stroke="#38BDF8" stroke-width="2" stroke-dasharray="3,3" />
+    <polygon points="244,40 252,44 244,48" fill="#38BDF8" />
+
+    <!-- Node 2: Redis Lua Gate -->
+    <g transform="translate(258, 20)">
+      <rect width="220" height="48" rx="6" fill="#131C31" stroke="#38BDF8" stroke-width="1.5" />
+      <text x="110" y="22" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="700" fill="#38BDF8" text-anchor="middle">Redis 7 Lua Script Gate</text>
+      <text x="110" y="38" font-family="ui-monospace, monospace" font-size="10" fill="#DAFA9C" text-anchor="middle">O(1) Atomic Seat Check</text>
+    </g>
+
+    <!-- Arrow 2 -->
+    <path d="M 484 44 L 518 44" stroke="#DAFA9C" stroke-width="2" />
+    <polygon points="518,40 526,44 518,48" fill="#DAFA9C" />
+
+    <!-- Node 3: Redlock Distributed Consensus -->
+    <g transform="translate(532, 20)">
+      <rect width="230" height="48" rx="6" fill="#131C31" stroke="#334155" stroke-width="1" />
+      <text x="115" y="22" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="700" fill="#E2E8F0" text-anchor="middle">Redlock Consensus</text>
+      <text x="115" y="38" font-family="ui-monospace, monospace" font-size="10" fill="#94A3B8" text-anchor="middle">Compensating INCRBY Sagas</text>
+    </g>
+
+    <!-- Arrow 3 -->
+    <path d="M 768 44 L 802 44" stroke="#818CF8" stroke-width="2" />
+    <polygon points="802,40 810,44 802,48" fill="#818CF8" />
+
+    <!-- Node 4: PostgreSQL & AWS Cloud -->
+    <g transform="translate(816, 20)">
+      <rect width="240" height="48" rx="6" fill="#131C31" stroke="#334155" stroke-width="1" />
+      <text x="120" y="22" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="700" fill="#E2E8F0" text-anchor="middle">PostgreSQL 16 Multi-AZ</text>
+      <text x="120" y="38" font-family="ui-monospace, monospace" font-size="10" fill="#94A3B8" text-anchor="middle">Advisory Locks • AWS ECS Fargate</text>
+    </g>
+  </g>
+</svg>

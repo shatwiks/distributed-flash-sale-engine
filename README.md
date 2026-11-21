@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/flash-sale-hero.svg" alt="Distributed Flash-Sale Engine: 10,000+ RPS Concurrency & Real-Time Inventory Control" width="100%" />
+</p>
+
 # Distributed Flash-Sale Ticket Booking Engine & Real-Time Inventory Manager
 
 <div align="center">
@@ -77,6 +81,15 @@ npm run frontend:dev
 ## 🏛️ Interactive Seat-Reservation UI & Live Telemetry
 
 To visually demonstrate distributed concurrency control, the repository includes a full-stack Next.js 16 interactive terminal (`frontend/`) engineered with a **Precision Avionics & Technical Ink** aesthetic (`#f5f4f2` warm paper ground, `#ffffff` surface cards, `#111111` technical accents) with 3D perspective physics, shared layout transitions, and live telemetry:
+
+<p align="center">
+  <img src="docs/images/main-dashboard.png" alt="Interactive Seat-Reservation Dashboard & Live Telemetry" width="100%" />
+</p>
+
+<p align="center">
+  <img src="docs/images/wire-inspector.png" alt="Live Event Loop & Real-Time Wire Inspector" width="49%" />
+  <img src="docs/images/ticket-pass.png" alt="Confirmed Dynamic Ticket Pass Modal" width="49%" />
+</p>
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
