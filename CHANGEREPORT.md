@@ -1,5 +1,23 @@
 # Change Report
 
+## 2026-11-22 07:10 IST — Pre-LinkedIn Production Security Hardening
+
+### Objective
+Harden public repository, API middleware, authentication, CORS, error handling, and CI workflow permissions prior to public LinkedIn sharing.
+
+### Files Modified & Created
+- `src/index.js` — Disabled `x-powered-by`, added HTTP security headers (`nosniff`, `DENY`, `Referrer-Policy`, `Permissions-Policy`, prod `HSTS`), replaced arbitrary origin reflection with explicit `CORS_ORIGINS` allowlist, capped JSON body at `64kb`, and added per-IP sliding-window rate limiting on mutating `POST /events*` routes.
+- `src/routes/events.js` — Strictly validated and clamped `chaosDelayMs` to `0..2000` ms to prevent connection-holding DoS.
+- `src/middleware/errorHandler.js` — Sanitized `status >= 500` responses to generic `Internal Server Error`.
+- `frontend/vercel.json` — Added production HTTP security headers.
+- `render.yaml` — Enabled `RATE_LIMIT_ENABLED` and added `CORS_ORIGINS` env configuration.
+- `SECURITY.md` — Added responsible vulnerability disclosure policy.
+
+### Verification Results
+- `node --check src/index.js src/routes/events.js src/middleware/errorHandler.js` (PASS), `json.load(frontend/vercel.json)` (PASS), `yaml.safe_load(render.yaml)` (PASS).
+
+---
+
 ## 2026-11-21 16:08 IST — Social Preview PNG & Thumbnail Assets for LinkedIn/GitHub
 
 ### Objective

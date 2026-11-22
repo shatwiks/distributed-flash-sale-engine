@@ -60,7 +60,7 @@ function errorHandler(err, req, res, next) {
   }
 
   const statusCode = err.statusCode || err.status || 500;
-  const message = err.message || 'Internal Server Error';
+  const message = statusCode >= 500 ? 'Internal Server Error' : (err.message || 'Request Error');
 
   if (statusCode >= 500) {
     console.error(`[Unhandled Error] ${req.method} ${req.originalUrl}:`, err);

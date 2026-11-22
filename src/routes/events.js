@@ -244,13 +244,18 @@ router.post('/:id/checkout', asyncHandler(async (req, res) => {
     }
   }
 
+  const parsedDelay = Number(chaosDelayMs);
+  const safeChaosDelayMs = Number.isFinite(parsedDelay)
+    ? Math.min(2000, Math.max(0, Math.floor(parsedDelay)))
+    : 0;
+
   const { order, statusCode } = await ticketService.processCheckout({
     eventId: id,
     userId: userId.trim(),
     quantity,
     idempotencyKey: idempotencyKey ? idempotencyKey.trim() : null,
     seatNumber: seatNumber ? seatNumber.trim() : null,
-    chaosDelayMs: chaosDelayMs ? Number(chaosDelayMs) : 0,
+    chaosDelayMs: safeChaosDelayMs,
     chaosFailDb: Boolean(chaosFailDb),
   });
 

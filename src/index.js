@@ -6,30 +6,96 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IS_PROD = process.env.NODE_ENV === 'production';
 
-// Middleware: CORS & JSON body parsing
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin) {
-    // Reflect request origin so credentials work across domains (Vercel, custom domain, localhost)
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    res.header('Access-Control-Allow-Origin', '*');
+app.disable('x-powered-by');
+if (IS_PROD) {
+  app.set('trust proxy', 1);
+}
+
+// Explicit CORS allowlist (never reflect arbitrary unknown origins with credentials)
+const configuredOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return false;
+  const clean = origin.replace(/\/+$/, '');
+  if (configuredOrigins.includes(clean)) return true;
+  if (!IS_PROD && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(clean)) {
+    return true;
   }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  return false;
+};
+
+// Defense-in-depth HTTP Security Headers & Strict CORS
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (IS_PROD) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+
+  const origin = req.headers.origin;
+  if (origin && isAllowedOrigin(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header(
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept, Authorization, idempotency-key, Idempotency-Key'
   );
-  res.header('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.sendStatus(origin && !isAllowedOrigin(origin) ? 403 : 204);
   }
   next();
 });
 
-app.use(express.json());
+// Sliding-window per-IP rate limiter for mutating routes in production
+const rateLimitEnabled =
+  process.env.NODE_ENV !== 'test' &&
+  (process.env.RATE_LIMIT_ENABLED === 'true' || (IS_PROD && process.env.RATE_LIMIT_ENABLED !== 'false'));
+
+if (rateLimitEnabled) {
+  const buckets = new Map();
+  const WINDOW_MS = 60 * 1000;
+  const MAX_BUCKETS = 10000;
+
+  app.use('/events', (req, res, next) => {
+    if (req.method !== 'POST') return next();
+    const isCheckout = req.path.endsWith('/checkout');
+    const limit = isCheckout ? 60 : 15;
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    const key = `${ip}:${isCheckout ? 'checkout' : 'admin'}`;
+    const now = Date.now();
+
+    if (buckets.size > MAX_BUCKETS) {
+      for (const [k, v] of buckets.entries()) {
+        if (now - v.start >= WINDOW_MS) buckets.delete(k);
+      }
+    }
+
+    const entry = buckets.get(key);
+    if (!entry || now - entry.start >= WINDOW_MS) {
+      buckets.set(key, { count: 1, start: now });
+      return next();
+    }
+    entry.count += 1;
+    if (entry.count > limit) {
+      res.setHeader('Retry-After', String(Math.ceil((WINDOW_MS - (now - entry.start)) / 1000)));
+      return res.status(429).json({ error: 'Too many requests. Please slow down and retry shortly.' });
+    }
+    return next();
+  });
+}
+
+app.use(express.json({ limit: '64kb' }));
 
 // Routes
 // Health check route: tests DB connectivity via SELECT 1
