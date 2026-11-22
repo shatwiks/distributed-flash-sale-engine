@@ -31,7 +31,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "ioredis": "^6.0.0",
-    "pg": "^8.13.3",
+    "pg": "^8.23.1",
     "redlock": "^5.0.0-beta.2"
   },
   "devDependencies": {
